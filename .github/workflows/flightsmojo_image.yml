@@ -48,7 +48,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.IMAGE }}:v4.16.0-fm1
+            ${{ env.IMAGE }}:v4.18.0-fm2
             ${{ env.IMAGE }}:flightsmojo-latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
