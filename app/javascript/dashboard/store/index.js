@@ -26,6 +26,7 @@ import conversationSearch from './modules/conversationSearch';
 import conversationStats from './modules/conversationStats';
 import conversationTypingStatus from './modules/conversationTypingStatus';
 import conversationUnreadCounts from './modules/conversationUnreadCounts';
+import inboxOpenCounts from './modules/inboxOpenCounts';
 import conversationWatchers from './modules/conversationWatchers';
 import csat from './modules/csat';
 import customRole from './modules/customRole';
@@ -50,9 +51,11 @@ import teamMembers from './modules/teamMembers';
 import teams from './modules/teams';
 import userNotificationSettings from './modules/userNotificationSettings';
 import webhooks from './modules/webhooks';
+import captainAgentSessions from './captain/agentSessions';
 import captainAssistants from './captain/assistant';
 import captainDocuments from './captain/document';
 import captainResponses from './captain/response';
+import captainFaqSuggestions from './captain/faqSuggestions';
 import captainInboxes from './captain/inboxes';
 import captainBulkActions from './captain/bulkActions';
 import copilotThreads from './captain/copilotThreads';
@@ -91,6 +94,7 @@ export default createStore({
     conversationStats,
     conversationTypingStatus,
     conversationUnreadCounts,
+    inboxOpenCounts,
     conversationWatchers,
     csat,
     customRole,
@@ -115,9 +119,11 @@ export default createStore({
     teams,
     userNotificationSettings,
     webhooks,
+    captainAgentSessions,
     captainAssistants,
     captainDocuments,
     captainResponses,
+    captainFaqSuggestions,
     captainInboxes,
     captainBulkActions,
     copilotThreads,

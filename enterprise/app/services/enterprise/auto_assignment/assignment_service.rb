@@ -24,7 +24,8 @@ module Enterprise::AutoAssignment::AssignmentService
 
     # Use balanced selector only if advanced_assignment feature is enabled
     selector = policy&.balanced? && account.feature_enabled?('advanced_assignment') ? balanced_selector : round_robin_selector
-    selector.select_agent(agents)
+    # FlightsMojo: sticky preference, applied after the capacity filter above.
+    selector.select_agent(agents, preferred_user_id: sticky_agent_id(conversation))
   end
 
   def filter_agents_by_capacity(agents)

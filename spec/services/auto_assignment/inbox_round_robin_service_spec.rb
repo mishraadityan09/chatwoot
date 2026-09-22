@@ -27,6 +27,15 @@ describe AutoAssignment::InboxRoundRobinService do
       expect(inbox_round_robin_service.send(:queue).map(&:to_i)).to match_array(inbox_members.map(&:user_id))
     end
 
+    it 'keeps the queue empty when the inbox has no members' do
+      empty_inbox = create(:inbox, account: account)
+      service = described_class.new(inbox: empty_inbox)
+      service.add_agent_to_queue(-1)
+
+      expect(service.available_agent).to be_nil
+      expect(service.send(:queue)).to be_empty
+    end
+
     it 'validates the queue and correct it before performing round robin' do
       # adding some invalid ids to queue
       inbox_round_robin_service.add_agent_to_queue([2, 3, 5, 9])
@@ -53,6 +62,25 @@ describe AutoAssignment::InboxRoundRobinService do
                  ].map(&:to_s)
                )).to eq inbox_members[3].user
         expect(inbox_round_robin_service.send(:queue)).to eq(expected_queue)
+      end
+    end
+
+    context 'when preferred_agent_id is passed' do
+      it 'returns the preferred agent when allowed and moves them to the back of the rotation' do
+        allowed = [inbox_members[1].user_id, inbox_members[3].user_id].map(&:to_s)
+        preferred = inbox_members[3].user_id.to_s
+
+        expect(inbox_round_robin_service.available_agent(allowed_agent_ids: allowed, preferred_agent_id: preferred))
+          .to eq inbox_members[3].user
+        expect(inbox_round_robin_service.send(:queue).first).to eq preferred
+      end
+
+      it 'falls back to round robin when the preferred agent is not allowed' do
+        allowed = [inbox_members[1].user_id].map(&:to_s)
+        preferred = inbox_members[3].user_id.to_s
+
+        expect(inbox_round_robin_service.available_agent(allowed_agent_ids: allowed, preferred_agent_id: preferred))
+          .to eq inbox_members[1].user
       end
     end
   end

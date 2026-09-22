@@ -17,26 +17,31 @@ class AutoAssignment::InboxRoundRobinService
   end
 
   def reset_queue
+    user_ids = inbox.inbox_members.map(&:user_id)
     clear_queue
-    add_agent_to_queue(inbox.inbox_members.map(&:user_id))
+    add_agent_to_queue(user_ids) if user_ids.any?
   end
 
   # end of queue management functions
 
   # allowed member ids = [assignable online agents supplied by the assignment service]
   # the values of allowed member ids should be in string format
-  def available_agent(allowed_agent_ids: [])
+  def available_agent(allowed_agent_ids: [], preferred_agent_id: nil)
     reset_queue unless validate_queue?
-    user_id = get_member_from_allowed_agent_ids(allowed_agent_ids)
+    user_id = get_member_from_allowed_agent_ids(allowed_agent_ids, preferred_agent_id)
     inbox.inbox_members.find_by(user_id: user_id)&.user if user_id.present?
   end
 
   private
 
-  def get_member_from_allowed_agent_ids(allowed_agent_ids)
+  def get_member_from_allowed_agent_ids(allowed_agent_ids, preferred_agent_id = nil)
     return nil if allowed_agent_ids.blank?
 
-    user_id = queue.intersection(allowed_agent_ids).pop
+    # FlightsMojo: a preferred (sticky) agent who is allowed is taken instead
+    # of the queue head — and still rotated to the back, so they don't also
+    # win the next round-robin pick.
+    user_id = preferred_agent_id if allowed_agent_ids.include?(preferred_agent_id)
+    user_id ||= queue.intersection(allowed_agent_ids).pop
     pop_push_to_queue(user_id)
     user_id
   end

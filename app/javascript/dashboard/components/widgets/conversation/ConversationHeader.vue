@@ -105,6 +105,25 @@ const copyConversationId = async () => {
     // error
   }
 };
+
+// FlightsMojo: booking id stamped by the support bot (conversation custom
+// attribute) surfaces in the header, click-to-copy. The public widget API
+// lets a visitor write this attribute too, so only the shape the bot itself
+// stamps (a numeric id) is shown.
+const BOOKING_ID_PATTERN = /^\d{1,10}$/;
+const bookingId = computed(() => {
+  const value = String(props.chat?.custom_attributes?.booking_id ?? '');
+  return BOOKING_ID_PATTERN.test(value) ? value : null;
+});
+
+const copyBookingId = async () => {
+  try {
+    await copyTextToClipboard(String(bookingId.value));
+    useAlert(t('CONVERSATION.HEADER.BOOKING_ID_COPY_SUCCESS'));
+  } catch (error) {
+    // error
+  }
+};
 </script>
 
 <template>
@@ -118,7 +137,7 @@ const copyConversationId = async () => {
       <BackButton
         v-if="showBackButton"
         :back-url="backButtonUrl"
-        class="ltr:mr-2 rtl:ml-2"
+        class="me-2"
       />
       <Avatar
         :name="currentContact.name"
@@ -127,9 +146,7 @@ const copyConversationId = async () => {
         :status="currentContact.availability_status"
         hide-offline-status
       />
-      <div
-        class="flex flex-col items-start min-w-0 ml-2 overflow-hidden rtl:ml-0 rtl:mr-2"
-      >
+      <div class="flex flex-col items-start min-w-0 ms-2 overflow-hidden">
         <div class="flex flex-row items-center max-w-full gap-1 p-0 m-0">
           <span
             class="text-sm font-medium truncate leading-tight text-n-slate-12"
@@ -143,6 +160,15 @@ const copyConversationId = async () => {
             class="text-n-amber-10 my-0 mx-0 min-w-[14px] flex-shrink-0"
             icon="warning"
           />
+          <button
+            v-if="bookingId"
+            v-tooltip="$t('CONVERSATION.HEADER.BOOKING_ID_COPY_TOOLTIP')"
+            type="button"
+            class="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12 hover:bg-n-slate-4 cursor-pointer"
+            @click="copyBookingId"
+          >
+            {{ $t('CONVERSATION.HEADER.BOOKING_ID_CHIP', { id: bookingId }) }}
+          </button>
         </div>
 
         <div

@@ -79,7 +79,11 @@ class Webhooks::Trigger
     return unless conversation&.pending?
     return if conversation&.account&.keep_pending_on_bot_failure
 
-    conversation.open!
+    # FlightsMojo: hand off properly rather than just opening. Since 4.18 a
+    # pending conversation is assigned to the inbox bot (ai_assignee); a bare
+    # open! left that in place, which keeps the conversation out of the
+    # `unassigned` scope, so auto-assignment never handed it to an agent.
+    conversation.bot_handoff!(dispatch_event: false)
     create_agent_bot_error_activity(conversation)
   end
 
