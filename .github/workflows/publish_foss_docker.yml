@@ -23,6 +23,9 @@ permissions:
 
 jobs:
   build:
+    # FlightsMojo fork: upstream's publish job; tags here would only fail on
+    # missing Docker Hub secrets and waste runners.
+    if: github.repository == 'chatwoot/chatwoot'
     strategy:
       fail-fast: false
       matrix:

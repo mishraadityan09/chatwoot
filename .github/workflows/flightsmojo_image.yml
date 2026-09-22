@@ -23,6 +23,12 @@ permissions:
   contents: read
   packages: write
 
+# One build per ref at a time, so a tag build and a branch build can't race
+# each other for flightsmojo-latest.
+concurrency:
+  group: flightsmojo-image-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   IMAGE: ghcr.io/mishraadityan09/chatwoot
 
@@ -40,8 +46,11 @@ jobs:
 
       - name: Decide image tags
         id: tags
+        # Only a pushed tag produces a version tag. A manual run against a
+        # tag ref must not rebuild it — that would silently change what the
+        # compose pin means.
         run: |
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF_TYPE" = "tag" ]; then
             echo "tags=${IMAGE}:${GITHUB_REF_NAME},${IMAGE}:flightsmojo-latest" >> "$GITHUB_OUTPUT"
           else
             echo "tags=${IMAGE}:flightsmojo-latest" >> "$GITHUB_OUTPUT"
