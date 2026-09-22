@@ -85,39 +85,29 @@ class AutoAssignment::AssignmentService
   end
 
   # FlightsMojo: sticky assignment. The id of the agent who most recently
-  # replied to this customer within STICKY_ASSIGNMENT_LOOKBACK — in any
-  # conversation, on any channel — or nil. Only public replies by a human
-  # count: bot messages, private notes, campaign sends and unanswered
-  # assignments do not. Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
+  # replied to this customer within STICKY_ASSIGNMENT_LOOKBACK, in any of the
+  # contact's conversations — or nil. (Chatwoot keeps one contact per email /
+  # phone number per account, so a channel that shares an identifier already
+  # shares the contact.) Only public replies by a human count: bot messages,
+  # private notes, campaign sends and unanswered assignments do not.
+  # Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
   def sticky_agent_id(conversation)
     return nil if sticky_assignment_disabled?
 
-    conversation_ids = inbox.account.conversations
-                            .where(contact_id: sticky_contact_ids(conversation.contact))
-                            .where.not(id: conversation.id)
-                            .select(:id)
+    conversation_ids = conversation.contact.conversations.where.not(id: conversation.id).select(:id)
 
-    Message.where(account_id: inbox.account_id, conversation_id: conversation_ids)
+    # reorder: Message's default scope orders ascending.
+    Message.where(conversation_id: conversation_ids)
            .outgoing
            .where(sender_type: 'User', private: false)
            .where("(messages.additional_attributes->'campaign_id') IS NULL")
            .where(created_at: STICKY_ASSIGNMENT_LOOKBACK.ago..)
-           .order(created_at: :desc)
+           .reorder(created_at: :desc)
            .pick(:sender_id)
   end
 
   def sticky_assignment_disabled?
     ActiveModel::Type::Boolean.new.cast(ENV.fetch('DISABLE_STICKY_ASSIGNMENT', false))
-  end
-
-  # The same person can have one contact row per channel (WhatsApp vs. web
-  # widget); the phone number is what links them. Email can't — contacts are
-  # unique per email within an account.
-  def sticky_contact_ids(contact)
-    contacts = inbox.account.contacts.where(id: contact.id)
-    return contacts.select(:id) if contact.phone_number.blank?
-
-    contacts.or(inbox.account.contacts.where(phone_number: contact.phone_number)).select(:id)
   end
 
   def filter_agents_by_team(agents, conversation)
