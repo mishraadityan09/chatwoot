@@ -107,10 +107,14 @@ const copyConversationId = async () => {
 };
 
 // FlightsMojo: booking id stamped by the support bot (conversation custom
-// attribute) surfaces in the header, click-to-copy.
-const bookingId = computed(
-  () => props.chat?.custom_attributes?.booking_id || null
-);
+// attribute) surfaces in the header, click-to-copy. The public widget API
+// lets a visitor write this attribute too, so only the shape the bot itself
+// stamps (a numeric id) is shown.
+const BOOKING_ID_PATTERN = /^\d{1,10}$/;
+const bookingId = computed(() => {
+  const value = String(props.chat?.custom_attributes?.booking_id ?? '');
+  return BOOKING_ID_PATTERN.test(value) ? value : null;
+});
 
 const copyBookingId = async () => {
   try {
@@ -160,7 +164,7 @@ const copyBookingId = async () => {
             v-if="bookingId"
             v-tooltip="$t('CONVERSATION.HEADER.BOOKING_ID_COPY_TOOLTIP')"
             type="button"
-            class="flex-shrink-0 max-w-40 truncate px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12 hover:bg-n-slate-4 cursor-pointer"
+            class="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12 hover:bg-n-slate-4 cursor-pointer"
             @click="copyBookingId"
           >
             {{ $t('CONVERSATION.HEADER.BOOKING_ID_CHIP', { id: bookingId }) }}

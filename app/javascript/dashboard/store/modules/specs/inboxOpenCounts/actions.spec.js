@@ -9,6 +9,7 @@ vi.mock('../../../../api/inbox/conversation', () => ({
 const commit = vi.fn();
 const inboxes = [{ id: 1 }, { id: 2 }];
 const rootGetters = { 'inboxes/getInboxes': inboxes };
+const oneInbox = { 'inboxes/getInboxes': [{ id: 1 }] };
 const metaResponse = count => ({ data: { meta: { all_count: count } } });
 
 describe('#actions', () => {
@@ -66,6 +67,60 @@ describe('#actions', () => {
       expect(ConversationApi.meta).not.toHaveBeenCalled();
       expect(commit).not.toHaveBeenCalled();
     });
+
+    it('ignores a slow round that finishes after a newer round committed', async () => {
+      let finishSlowRound;
+      ConversationApi.meta
+        .mockReturnValueOnce(
+          new Promise(resolve => {
+            finishSlowRound = resolve;
+          })
+        )
+        .mockResolvedValueOnce(metaResponse(5));
+      const state = { counts: {} };
+
+      const slowRound = actions.fetchNow({
+        commit,
+        state,
+        rootGetters: oneInbox,
+      });
+      await actions.fetchNow({ commit, state, rootGetters: oneInbox });
+      finishSlowRound(metaResponse(1));
+      await slowRound;
+
+      expect(commit.mock.calls).toEqual([
+        [types.SET_INBOX_OPEN_COUNTS, { 1: 5 }],
+      ]);
+    });
+
+    it('still commits a slow round when no newer round has committed yet', async () => {
+      let finishFirst;
+      let finishSecond;
+      ConversationApi.meta
+        .mockReturnValueOnce(
+          new Promise(resolve => {
+            finishFirst = resolve;
+          })
+        )
+        .mockReturnValueOnce(
+          new Promise(resolve => {
+            finishSecond = resolve;
+          })
+        );
+      const state = { counts: {} };
+
+      const first = actions.fetchNow({ commit, state, rootGetters: oneInbox });
+      const second = actions.fetchNow({ commit, state, rootGetters: oneInbox });
+      finishFirst(metaResponse(1));
+      await first;
+      finishSecond(metaResponse(2));
+      await second;
+
+      expect(commit.mock.calls).toEqual([
+        [types.SET_INBOX_OPEN_COUNTS, { 1: 1 }],
+        [types.SET_INBOX_OPEN_COUNTS, { 1: 2 }],
+      ]);
+    });
   });
 
   describe('#fetch', () => {
@@ -94,14 +149,6 @@ describe('#actions', () => {
 
       vi.advanceTimersByTime(FETCH_THROTTLE_MS);
       expect(dispatch).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('#clear', () => {
-    it('clears the counts', () => {
-      actions.clear({ commit });
-
-      expect(commit).toHaveBeenCalledWith(types.SET_INBOX_OPEN_COUNTS, {});
     });
   });
 });

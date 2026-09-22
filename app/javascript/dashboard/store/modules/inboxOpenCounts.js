@@ -12,7 +12,8 @@ export const FETCH_THROTTLE_MS = 5000;
 // full page navigations, so nothing carries over between accounts.
 let lastFetchAt = 0;
 let pendingTimer = null;
-let latestRound = 0;
+let roundCounter = 0;
+let committedRound = 0;
 
 export const state = {
   counts: {},
@@ -54,8 +55,8 @@ export const actions = {
     if (!inboxes.length) return;
 
     lastFetchAt = Date.now();
-    latestRound += 1;
-    const round = latestRound;
+    roundCounter += 1;
+    const round = roundCounter;
 
     const results = await Promise.allSettled(
       inboxes.map(async inbox => [
@@ -63,8 +64,12 @@ export const actions = {
         await fetchInboxOpenCount(inbox.id),
       ])
     );
-    // A slow round must not overwrite a fresher one that finished first.
-    if (round !== latestRound) return;
+    // A slow round must not overwrite a fresher one that has already
+    // committed. Compared against the last *committed* round, not the last
+    // started one, so rounds slower than the throttle still land instead of
+    // being superseded forever while events keep arriving.
+    if (round < committedRound) return;
+    committedRound = round;
 
     // An inbox whose request failed keeps its last known count rather than
     // dropping to 0 — SidebarUnreadBadge hides at 0, which would make a busy
@@ -75,9 +80,6 @@ export const actions = {
         .map(result => result.value)
     );
     commit(types.SET_INBOX_OPEN_COUNTS, { ...$state.counts, ...fresh });
-  },
-  clear({ commit }) {
-    commit(types.SET_INBOX_OPEN_COUNTS, {});
   },
 };
 
