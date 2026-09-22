@@ -269,6 +269,7 @@ describe('ReconnectService', () => {
       expect(storeMock.dispatch).toHaveBeenCalledWith('teams/revalidate', {
         newKey: 'teamKey',
       });
+      expect(storeMock.dispatch).toHaveBeenCalledWith('inboxOpenCounts/fetch');
     });
   });
 

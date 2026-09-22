@@ -110,6 +110,10 @@ class ReconnectService {
       this.store.dispatch('inboxes/revalidate', { newKey: inbox }),
       this.store.dispatch('teams/revalidate', { newKey: team }),
     ]);
+    // FlightsMojo: sidebar open-ticket badges — anything created or resolved
+    // while disconnected would otherwise leave them stale until the next
+    // event on the account.
+    this.store.dispatch('inboxOpenCounts/fetch');
   };
 
   handleRouteSpecificFetch = async () => {

@@ -215,8 +215,15 @@ const labels = useMapGetter('labels/getLabelsOnSidebar');
 const allUnreadCount = useMapGetter(
   'conversationUnreadCounts/getAllUnreadCount'
 );
-const getInboxUnreadCount = useMapGetter(
-  'conversationUnreadCounts/getInboxUnreadCount'
+// FlightsMojo: the Channels list shows — and sorts by — open-ticket counts
+// instead of unread counts.
+const getInboxOpenCount = useMapGetter('inboxOpenCounts/getInboxOpenCount');
+watch(
+  () => inboxes.value.map(inbox => inbox.id).join(','),
+  ids => {
+    if (ids) store.dispatch('inboxOpenCounts/fetch');
+  },
+  { immediate: true }
 );
 const getLabelUnreadCount = useMapGetter(
   'conversationUnreadCounts/getLabelUnreadCount'
@@ -314,7 +321,7 @@ const sortedInboxes = computed(() =>
   sortSidebarItems(inboxes.value, {
     sortBy: getSortForSection(SIDEBAR_SORT_SECTIONS.CHANNELS),
     labelKey: inbox => inbox.name,
-    unreadCountKey: inbox => getInboxUnreadCount.value(inbox.id),
+    unreadCountKey: inbox => getInboxOpenCount.value(inbox.id),
   })
 );
 
@@ -457,7 +464,8 @@ const menuItems = computed(() => {
           children: sortedInboxes.value.map(inbox => ({
             name: `${inbox.name}-${inbox.id}`,
             label: inbox.name,
-            badgeCount: getInboxUnreadCount.value(inbox.id),
+            // FlightsMojo: show open-ticket count instead of unread count.
+            badgeCount: getInboxOpenCount.value(inbox.id),
             icon: h(ChannelIcon, { inbox, class: 'size-[16px]' }),
             to: accountScopedRoute('inbox_dashboard', { inbox_id: inbox.id }),
             component: leafProps =>

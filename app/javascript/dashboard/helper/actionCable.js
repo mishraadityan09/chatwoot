@@ -116,6 +116,8 @@ class ActionCableConnector extends BaseActionCableConnector {
   onConversationCreated = data => {
     this.app.$store.dispatch('addConversation', data);
     this.fetchConversationStats();
+    // FlightsMojo: sidebar open-ticket badges (throttled in the store).
+    this.app.$store.dispatch('inboxOpenCounts/fetch');
   };
 
   onConversationRead = data => {
@@ -144,6 +146,9 @@ class ActionCableConnector extends BaseActionCableConnector {
   onStatusChange = data => {
     this.app.$store.dispatch('updateConversation', data);
     this.fetchConversationStats();
+    // FlightsMojo: a resolve/reopen changes open counts without any new
+    // message, so refresh the sidebar badges here too (throttled in store).
+    this.app.$store.dispatch('inboxOpenCounts/fetch');
   };
 
   onConversationUpdated = data => {
