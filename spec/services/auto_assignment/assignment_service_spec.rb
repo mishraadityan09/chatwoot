@@ -495,6 +495,9 @@ RSpec.describe AutoAssignment::AssignmentService do
     it 'moves the sticky agent to the back of the round-robin rotation' do
       agent3 = create(:user, account: account, role: :agent, availability: :online)
       create(:inbox_member, inbox: inbox, user: agent3)
+      # `inbox` already loaded its members in the before block; without a reset
+      # the queue is rebuilt without agent3.
+      inbox.inbox_members.reset
       allow(OnlineStatusTracker).to receive(:get_available_users)
         .and_return({ agent.id.to_s => 'online', agent2.id.to_s => 'online', agent3.id.to_s => 'online' })
       # Queue order [agent, agent3, agent2]: agent2 is next anyway. After the
