@@ -58,6 +58,24 @@ RSpec.describe Enterprise::AutoAssignment::BalancedSelector do
       end
     end
 
+    context 'with a preferred agent (FlightsMojo sticky assignment)' do
+      it 'returns the preferred agent even when others carry less workload' do
+        3.times { create(:conversation, inbox: inbox, assignee: agent1, status: 'open') }
+
+        selected_agent = selector.select_agent([member1, member2, member3], preferred_user_id: agent1.id)
+
+        expect(selected_agent).to eq(agent1)
+      end
+
+      it 'ignores a preferred agent who is not in the available set' do
+        create(:conversation, inbox: inbox, assignee: agent1, status: 'open')
+
+        selected_agent = selector.select_agent([member1, member2], preferred_user_id: agent3.id)
+
+        expect(selected_agent).to eq(agent2)
+      end
+    end
+
     context 'when no agents are available' do
       it 'returns nil' do
         selected_agent = selector.select_agent([])

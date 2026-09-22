@@ -64,5 +64,24 @@ describe AutoAssignment::InboxRoundRobinService do
         expect(inbox_round_robin_service.send(:queue)).to eq(expected_queue)
       end
     end
+
+    context 'when preferred_agent_id is passed' do
+      it 'returns the preferred agent when allowed and moves them to the back of the rotation' do
+        allowed = [inbox_members[1].user_id, inbox_members[3].user_id].map(&:to_s)
+        preferred = inbox_members[3].user_id.to_s
+
+        expect(inbox_round_robin_service.available_agent(allowed_agent_ids: allowed, preferred_agent_id: preferred))
+          .to eq inbox_members[3].user
+        expect(inbox_round_robin_service.send(:queue).first).to eq preferred
+      end
+
+      it 'falls back to round robin when the preferred agent is not allowed' do
+        allowed = [inbox_members[1].user_id].map(&:to_s)
+        preferred = inbox_members[3].user_id.to_s
+
+        expect(inbox_round_robin_service.available_agent(allowed_agent_ids: allowed, preferred_agent_id: preferred))
+          .to eq inbox_members[1].user
+      end
+    end
   end
 end

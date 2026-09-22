@@ -1,10 +1,15 @@
 class Enterprise::AutoAssignment::BalancedSelector
   pattr_initialize [:inbox!]
 
-  def select_agent(available_agents)
+  def select_agent(available_agents, preferred_user_id: nil)
     return nil if available_agents.empty?
 
     agent_users = available_agents.map(&:user)
+    # FlightsMojo: a sticky (preferred) agent who passed the capacity filter
+    # takes precedence over load balancing.
+    preferred = agent_users.find { |user| user.id == preferred_user_id }
+    return preferred if preferred
+
     assignment_counts = fetch_assignment_counts(agent_users)
 
     agent_users.min_by { |user| assignment_counts[user.id] || 0 }

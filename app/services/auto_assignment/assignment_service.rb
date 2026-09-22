@@ -1,6 +1,12 @@
 class AutoAssignment::AssignmentService
   pattr_initialize [:inbox!]
 
+  # FlightsMojo: a returning customer goes back to the agent who last replied
+  # to them, provided that reply is no older than this. Measured from the
+  # reply itself, so an assignment the agent never answered doesn't count and
+  # the window really does expire.
+  STICKY_ASSIGNMENT_LOOKBACK = 90.days
+
   def perform_bulk_assignment(limit: 100)
     return 0 unless inbox.auto_assignment_v2_enabled?
     return 0 unless inbox.enable_auto_assignment?
@@ -72,7 +78,48 @@ class AutoAssignment::AssignmentService
     agents = filter_agents_by_rate_limit(agents)
     return nil if agents.empty?
 
-    round_robin_selector.select_agent(agents)
+    # FlightsMojo: the sticky preference is applied by the selector, after
+    # every eligibility filter above, so it can never bypass a gate round
+    # robin enforces. The enterprise override passes the same preference.
+    round_robin_selector.select_agent(agents, preferred_user_id: sticky_agent_id(conversation))
+  end
+
+  # FlightsMojo: sticky assignment. The id of the agent who most recently
+  # replied to this customer within STICKY_ASSIGNMENT_LOOKBACK — in any
+  # conversation, on any channel — or nil. Only public replies by a human
+  # count: bot messages, private notes and unanswered assignments do not.
+  # Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
+  def sticky_agent_id(conversation)
+    return nil if conversation.nil? || sticky_assignment_disabled?
+
+    contact = conversation.contact
+    return nil if contact.blank?
+
+    conversation_ids = inbox.account.conversations
+                            .where(contact_id: sticky_contact_ids(contact))
+                            .where.not(id: conversation.id)
+                            .select(:id)
+
+    Message.where(account_id: inbox.account_id, conversation_id: conversation_ids)
+           .outgoing
+           .where(sender_type: 'User', private: false)
+           .where(created_at: STICKY_ASSIGNMENT_LOOKBACK.ago..)
+           .order(created_at: :desc)
+           .pick(:sender_id)
+  end
+
+  def sticky_assignment_disabled?
+    ActiveModel::Type::Boolean.new.cast(ENV.fetch('DISABLE_STICKY_ASSIGNMENT', false))
+  end
+
+  # The same person can have one contact row per channel (WhatsApp vs. web
+  # widget); the phone number is what links them. Email can't — contacts are
+  # unique per email within an account.
+  def sticky_contact_ids(contact)
+    contacts = inbox.account.contacts.where(id: contact.id)
+    return contacts.select(:id) if contact.phone_number.blank?
+
+    contacts.or(inbox.account.contacts.where(phone_number: contact.phone_number)).select(:id)
   end
 
   def filter_agents_by_team(agents, conversation)

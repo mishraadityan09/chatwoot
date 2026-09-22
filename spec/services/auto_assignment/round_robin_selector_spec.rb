@@ -51,11 +51,22 @@ RSpec.describe AutoAssignment::RoundRobinSelector do
 
       it 'uses round robin service for selection' do
         expect(round_robin_service).to receive(:available_agent).with(
-          allowed_agent_ids: [agent1.id.to_s, agent2.id.to_s, agent3.id.to_s]
+          allowed_agent_ids: [agent1.id.to_s, agent2.id.to_s, agent3.id.to_s],
+          preferred_agent_id: nil
         ).and_return(agent1)
 
         selected_agent = selector.select_agent(available_agents)
         expect(selected_agent).to eq(agent1)
+      end
+
+      it 'passes a preferred (sticky) agent through to the round robin service' do
+        expect(round_robin_service).to receive(:available_agent).with(
+          allowed_agent_ids: [agent1.id.to_s, agent2.id.to_s, agent3.id.to_s],
+          preferred_agent_id: agent2.id.to_s
+        ).and_return(agent2)
+
+        selected_agent = selector.select_agent(available_agents, preferred_user_id: agent2.id)
+        expect(selected_agent).to eq(agent2)
       end
     end
 
