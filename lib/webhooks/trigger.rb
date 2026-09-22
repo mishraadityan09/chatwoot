@@ -79,6 +79,11 @@ class Webhooks::Trigger
     return unless conversation&.pending?
     return if conversation&.account&.keep_pending_on_bot_failure
 
+    # FlightsMojo: also release the bot's assignment. Since 4.18 a pending
+    # conversation is assigned to the inbox bot (ai_assignee); left in place
+    # it keeps the conversation out of the `unassigned` scope, so
+    # auto-assignment would never hand it to an agent.
+    conversation.ai_assignee = nil
     conversation.open!
     create_agent_bot_error_activity(conversation)
   end

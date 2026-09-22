@@ -120,6 +120,18 @@ describe Webhooks::Trigger do
         expect(activity_message.content).to eq(agent_bot_error_content)
       end
 
+      it 'releases the bot assignment when it reopens a pending conversation' do
+        pending_conversation.update!(ai_assignee: create(:agent_bot, account: account))
+        payload = { event: 'message_created', id: pending_message.id }
+
+        expect(SafeFetch).to receive(:fetch).and_raise(SafeFetch::HttpError.new('404 Not Found'))
+
+        trigger.execute(url, payload, webhook_type)
+
+        expect(pending_conversation.reload).to have_attributes(status: 'open', ai_assignee: nil, assignee_agent_bot_id: nil)
+        expect(Conversation.unassigned).to include(pending_conversation)
+      end
+
       it 'does not change message status or enqueue activity when conversation is not pending' do
         payload = { event: 'message_created', conversation: { id: conversation.id }, id: message.id }
 
