@@ -452,30 +452,26 @@ RSpec.describe AutoAssignment::AssignmentService do
     let(:round_robin) { AutoAssignment::InboxRoundRobinService.new(inbox: inbox) }
     let(:contact) { create(:contact, account: account, phone_number: '+911234567890') }
     let(:previous_conversation) { create(:conversation, inbox: inbox, contact: contact, assignee: agent2) }
-
-    def agent_reply(user, conversation, **attrs)
-      create(:message, account: account, inbox: inbox, conversation: conversation, sender: user, message_type: :outgoing, **attrs)
+    let(:reply_attributes) { {} }
+    let(:reply) do
+      create(:message, account: account, inbox: inbox, conversation: previous_conversation,
+                       sender: agent2, message_type: :outgoing, **reply_attributes)
     end
-
-    # Arrange the round-robin queue so that its next pick is `next_agent`.
-    # With the queue pointing at `agent`, any assignment to agent2 below can
-    # only come from the sticky preference.
-    def make_round_robin_prefer(next_agent)
-      other = next_agent == agent ? agent2 : agent
-      round_robin.reset_queue
-      round_robin.available_agent(allowed_agent_ids: [other.id.to_s])
-    end
+    let(:conversation) { create(:conversation, inbox: inbox, contact: contact, assignee: nil) }
 
     before do
       create(:inbox_member, inbox: inbox, user: agent2)
       allow(OnlineStatusTracker).to receive(:get_available_users)
         .and_return({ agent.id.to_s => 'online', agent2.id.to_s => 'online' })
-      make_round_robin_prefer(agent)
+      # Queue order [agent2, agent]: round robin's next pick is `agent`, so an
+      # assignment to agent2 can only come from the sticky preference.
+      round_robin.reset_queue
+      round_robin.available_agent(allowed_agent_ids: [agent2.id.to_s])
     end
 
     it 'assigns a returning customer to the agent who last replied to them' do
-      agent_reply(agent2, previous_conversation)
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
+      reply
+      conversation
 
       service.perform_bulk_assignment(limit: 1)
 
@@ -483,74 +479,103 @@ RSpec.describe AutoAssignment::AssignmentService do
     end
 
     it 'moves the sticky agent to the back of the round-robin rotation' do
-      agent_reply(agent2, previous_conversation)
-      make_round_robin_prefer(agent2)
-      returning = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
+      reply
+      # Put agent2 next in line; without the rotation the new customer would go to them too.
+      round_robin.available_agent(allowed_agent_ids: [agent.id.to_s])
+      conversation
       new_customer = create(:conversation, inbox: inbox, assignee: nil)
 
       service.perform_bulk_assignment(limit: 2)
 
-      expect(returning.reload.assignee).to eq(agent2)
-      # Without the rotation agent2 would still be next in the queue.
+      expect(conversation.reload.assignee).to eq(agent2)
       expect(new_customer.reload.assignee).to eq(agent)
     end
 
-    it 'ignores an assignment the agent never replied to' do
-      previous_conversation
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
-
-      service.perform_bulk_assignment(limit: 1)
-
-      expect(conversation.reload.assignee).to eq(agent)
-    end
-
-    it 'ignores private notes' do
-      agent_reply(agent2, previous_conversation, private: true)
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
-
-      service.perform_bulk_assignment(limit: 1)
-
-      expect(conversation.reload.assignee).to eq(agent)
-    end
-
-    it 'expires once the last reply is older than the lookback window' do
-      agent_reply(agent2, previous_conversation, created_at: 91.days.ago)
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
-
-      service.perform_bulk_assignment(limit: 1)
-
-      expect(conversation.reload.assignee).to eq(agent)
-    end
-
     it 'falls back to round robin when the previous agent is not available' do
-      agent_reply(agent2, previous_conversation)
+      reply
       allow(OnlineStatusTracker).to receive(:get_available_users).and_return({ agent.id.to_s => 'online' })
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
+      conversation
 
       service.perform_bulk_assignment(limit: 1)
 
       expect(conversation.reload.assignee).to eq(agent)
-    end
-
-    it 'recognises the same customer on another channel by phone number' do
-      agent_reply(agent2, previous_conversation)
-      other_channel_contact = create(:contact, account: account, phone_number: contact.phone_number)
-      conversation = create(:conversation, inbox: inbox, contact: other_channel_contact, assignee: nil)
-
-      service.perform_bulk_assignment(limit: 1)
-
-      expect(conversation.reload.assignee).to eq(agent2)
     end
 
     it 'can be switched off with DISABLE_STICKY_ASSIGNMENT' do
-      agent_reply(agent2, previous_conversation)
-      conversation = create(:conversation, inbox: inbox, contact: contact, assignee: nil)
+      reply
+      conversation
 
       with_modified_env DISABLE_STICKY_ASSIGNMENT: '1' do
         service.perform_bulk_assignment(limit: 1)
       end
 
       expect(conversation.reload.assignee).to eq(agent)
+    end
+
+    context 'when the customer writes in from another channel' do
+      let(:conversation) do
+        other_channel_contact = create(:contact, account: account, phone_number: contact.phone_number)
+        create(:conversation, inbox: inbox, contact: other_channel_contact, assignee: nil)
+      end
+
+      it 'recognises them by phone number' do
+        reply
+        conversation
+
+        service.perform_bulk_assignment(limit: 1)
+
+        expect(conversation.reload.assignee).to eq(agent2)
+      end
+    end
+
+    context 'when the previous assignment was never answered' do
+      it 'does not stick' do
+        previous_conversation
+        conversation
+
+        service.perform_bulk_assignment(limit: 1)
+
+        expect(conversation.reload.assignee).to eq(agent)
+      end
+    end
+
+    context 'when the only reply is a private note' do
+      let(:reply_attributes) { { private: true } }
+
+      it 'does not stick' do
+        reply
+        conversation
+
+        service.perform_bulk_assignment(limit: 1)
+
+        expect(conversation.reload.assignee).to eq(agent)
+      end
+    end
+
+    context 'when the only reply is a campaign send' do
+      let(:reply_attributes) { { additional_attributes: { campaign_id: 42 } } }
+
+      it 'does not stick' do
+        reply
+        conversation
+
+        service.perform_bulk_assignment(limit: 1)
+
+        expect(conversation.reload.assignee).to eq(agent)
+      end
+    end
+
+    context 'when the last reply is older than the lookback window' do
+      let(:reply_attributes) { { created_at: 91.days.ago } }
+
+      it 'does not stick' do
+        reply
+        conversation
+
+        service.perform_bulk_assignment(limit: 1)
+
+        expect(conversation.reload.assignee).to eq(agent)
+      end
     end
   end
 end

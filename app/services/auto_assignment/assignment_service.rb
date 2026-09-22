@@ -87,22 +87,20 @@ class AutoAssignment::AssignmentService
   # FlightsMojo: sticky assignment. The id of the agent who most recently
   # replied to this customer within STICKY_ASSIGNMENT_LOOKBACK — in any
   # conversation, on any channel — or nil. Only public replies by a human
-  # count: bot messages, private notes and unanswered assignments do not.
-  # Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
+  # count: bot messages, private notes, campaign sends and unanswered
+  # assignments do not. Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
   def sticky_agent_id(conversation)
-    return nil if conversation.nil? || sticky_assignment_disabled?
-
-    contact = conversation.contact
-    return nil if contact.blank?
+    return nil if sticky_assignment_disabled?
 
     conversation_ids = inbox.account.conversations
-                            .where(contact_id: sticky_contact_ids(contact))
+                            .where(contact_id: sticky_contact_ids(conversation.contact))
                             .where.not(id: conversation.id)
                             .select(:id)
 
     Message.where(account_id: inbox.account_id, conversation_id: conversation_ids)
            .outgoing
            .where(sender_type: 'User', private: false)
+           .where("(messages.additional_attributes->'campaign_id') IS NULL")
            .where(created_at: STICKY_ASSIGNMENT_LOOKBACK.ago..)
            .order(created_at: :desc)
            .pick(:sender_id)
