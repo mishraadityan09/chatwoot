@@ -86,18 +86,19 @@ class AutoAssignment::AssignmentService
 
   # FlightsMojo: sticky assignment. The id of the agent who most recently
   # replied to this customer within STICKY_ASSIGNMENT_LOOKBACK, in any of the
-  # contact's conversations — or nil. (Chatwoot keeps one contact per email /
-  # phone number per account, so a channel that shares an identifier already
-  # shares the contact.) Only public replies by a human count: bot messages,
-  # private notes, campaign sends and unanswered assignments do not.
-  # Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
+  # contact's conversations, this one included — or nil. (Chatwoot keeps one
+  # contact per email / phone number per account, so a channel that shares an
+  # identifier already shares the contact.) Only public replies by a human
+  # count: bot messages, private notes, campaign sends and unanswered
+  # assignments do not. Kill switch: DISABLE_STICKY_ASSIGNMENT=true.
   def sticky_agent_id(conversation)
-    return nil if sticky_assignment_disabled?
+    return nil if conversation.nil? || sticky_assignment_disabled?
 
-    conversation_ids = conversation.contact.conversations.where.not(id: conversation.id).select(:id)
+    conversation_ids = Conversation.where(contact_id: conversation.contact_id).select(:id)
 
-    # reorder: Message's default scope orders ascending.
-    Message.where(conversation_id: conversation_ids)
+    # account_id lets index_messages_on_conversation_account_type_created cover
+    # the lookup; reorder because Message's default scope orders ascending.
+    Message.where(account_id: inbox.account_id, conversation_id: conversation_ids)
            .outgoing
            .where(sender_type: 'User', private: false)
            .where("(messages.additional_attributes->'campaign_id') IS NULL")

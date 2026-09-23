@@ -7,7 +7,7 @@ class Enterprise::AutoAssignment::BalancedSelector
     agent_users = available_agents.map(&:user)
     # FlightsMojo: a sticky (preferred) agent who passed the capacity filter
     # takes precedence over load balancing.
-    preferred = agent_users.find { |user| user.id == preferred_user_id }
+    preferred = agent_users.find { |user| user.id == preferred_user_id.to_i }
     return preferred if preferred
 
     assignment_counts = fetch_assignment_counts(agent_users)

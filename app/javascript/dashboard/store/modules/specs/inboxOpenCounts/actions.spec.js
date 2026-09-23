@@ -57,6 +57,20 @@ describe('#actions', () => {
       });
     });
 
+    it('does not commit when no count changed', async () => {
+      ConversationApi.meta
+        .mockResolvedValueOnce(metaResponse(3))
+        .mockResolvedValueOnce(metaResponse(7));
+
+      await actions.fetchNow({
+        commit,
+        state: { counts: { 1: 3, 2: 7 } },
+        rootGetters,
+      });
+
+      expect(commit).not.toHaveBeenCalled();
+    });
+
     it('does nothing until the inbox list is loaded', async () => {
       await actions.fetchNow({
         commit,

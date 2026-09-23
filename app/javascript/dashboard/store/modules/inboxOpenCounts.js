@@ -79,7 +79,15 @@ export const actions = {
         .filter(result => result.status === 'fulfilled')
         .map(result => result.value)
     );
-    commit(types.SET_INBOX_OPEN_COUNTS, { ...$state.counts, ...fresh });
+    const next = { ...$state.counts, ...fresh };
+    // The sidebar menu is one big computed; don't invalidate it when nothing
+    // actually changed.
+    const unchanged =
+      Object.keys(next).length === Object.keys($state.counts).length &&
+      Object.keys(next).every(id => next[id] === $state.counts[id]);
+    if (unchanged) return;
+
+    commit(types.SET_INBOX_OPEN_COUNTS, next);
   },
 };
 
