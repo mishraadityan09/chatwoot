@@ -6,6 +6,9 @@ import { useChatListKeyboardEvents } from 'dashboard/composables/chatlist/useCha
 import ConversationItem from './ConversationItem.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import IntersectionObserver from 'dashboard/components/IntersectionObserver.vue';
+// FlightsMojo: ticket table header, priority groups, default table layout.
+import FmTicketTableHeader from 'dashboard/flightsmojo/tickets/FmTicketTableHeader.vue';
+import { useTicketTable } from 'dashboard/flightsmojo/tickets/ticketTable';
 
 import wootConstants from 'dashboard/constants/globals';
 
@@ -38,6 +41,7 @@ const showExpandedCards = computed(
 );
 
 useChatListKeyboardEvents(conversationListRef);
+useTicketTable(() => props.conversationList);
 
 const intersectionObserverOptions = computed(() => ({
   root: conversationListRef.value,
@@ -63,6 +67,11 @@ defineExpose({ conversationListRef });
     class="flex-1 min-h-0 overflow-y-auto conversations-list"
     :class="{ '!overflow-hidden': isContextMenuOpen }"
   >
+    <FmTicketTableHeader
+      v-if="showExpandedCards"
+      :loaded-count="conversationList.length"
+      :folders-id="foldersId"
+    />
     <Virtualizer
       ref="virtualListRef"
       v-slot="{ item }"

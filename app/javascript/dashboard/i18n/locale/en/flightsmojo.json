@@ -4,6 +4,41 @@
       "CHIP": "BK-{id}",
       "COPY_TOOLTIP": "Click to copy booking ID",
       "COPY_SUCCESS": "Booking ID copied to clipboard"
+    },
+    "TICKETS": {
+      "COLUMNS": {
+        "STATUS": "Status",
+        "SUBJECT": "Subject",
+        "REQUESTER": "Requester",
+        "REQUESTED": "Requested",
+        "PRIORITY": "Priority",
+        "GROUP": "Group",
+        "ASSIGNEE": "Assignee",
+        "CHANNEL": "Channel",
+        "UPDATED": "Updated"
+      },
+      "STATUS": {
+        "OPEN": "Open",
+        "PENDING": "Pending",
+        "SNOOZED": "Snoozed",
+        "RESOLVED": "Resolved"
+      },
+      "PRIORITY": {
+        "URGENT": "Urgent",
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low",
+        "NONE": "No priority"
+      },
+      "SUMMARY": {
+        "FOLDER": "{loaded} of {total} tickets",
+        "LOADED": "{count} tickets shown"
+      },
+      "UPDATED_JUST_NOW": "Updated just now",
+      "UPDATED_AGO": "Updated {time}",
+      "EMPTY_VALUE": "—",
+      "ROW_ACTIONS": "More actions",
+      "MORE_LABELS": "+{count}"
     }
   }
 }

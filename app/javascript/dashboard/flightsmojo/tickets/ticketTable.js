@@ -1,0 +1,98 @@
+// FlightsMojo: state shared by the Zendesk-style ticket table. The table is
+// Chatwoot's expanded conversation layout with our FmTicketRow in place of
+// ConversationCardExpanded; ConversationList calls useTicketTable once.
+import { computed, inject, provide, toValue, watch } from 'vue';
+import { createSharedComposable, useNow } from '@vueuse/core';
+import { useMapGetter } from 'dashboard/composables/store';
+import { useUISettings } from 'dashboard/composables/useUISettings';
+import wootConstants from 'dashboard/constants/globals';
+
+export const TICKET_GROUPS_KEY = Symbol('fmTicketGroups');
+
+// Highest first, matching Chatwoot's priority_desc sort.
+export const PRIORITY_KEYS = ['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NONE'];
+
+export const priorityKey = priority =>
+  PRIORITY_KEYS.includes(String(priority).toUpperCase())
+    ? String(priority).toUpperCase()
+    : 'NONE';
+
+/**
+ * Priority groups for the loaded rows, Zendesk-style ("High (12)").
+ * Returns a Map from the id of each group's first row to { key, count }.
+ * Empty when the rows are not in priority order (e.g. sorted by latest), so
+ * headers only appear when they describe the list truthfully.
+ * @param {Array} list - conversations in display order
+ * @returns {Map<number, {key: string, count: number}>}
+ */
+export const getTicketGroups = list => {
+  const groups = new Map();
+  if (!Array.isArray(list)) return groups;
+
+  let previousRank = -1;
+  let current = null;
+  for (let i = 0; i < list.length; i += 1) {
+    const chat = list[i];
+    const key = priorityKey(chat.priority);
+    const rank = PRIORITY_KEYS.indexOf(key);
+    if (rank < previousRank) return new Map();
+    if (!current || current.key !== key) {
+      current = { key, count: 0 };
+      groups.set(chat.id, current);
+    }
+    current.count += 1;
+    previousRank = rank;
+  }
+  return groups;
+};
+
+/** Group info for one row, or null when the row doesn't start a group. */
+export const useTicketGroup = chatId => {
+  const groups = inject(TICKET_GROUPS_KEY, null);
+  return computed(() => groups?.value.get(toValue(chatId)) || null);
+};
+
+// Agents who never picked a layout land on the table. Anyone who chose one
+// (previously_used_conversation_display_type is set by both layout toggles)
+// keeps it. Writing both keys explicitly keeps every upstream reader of
+// conversation_display_type (which default to "condensed") consistent.
+let defaultLayoutChecked = false;
+export const useDefaultTicketLayout = () => {
+  const { uiSettings, updateUISettings } = useUISettings();
+  const currentUser = useMapGetter('getCurrentUser');
+  const { EXPANDED } = wootConstants.LAYOUT_TYPES;
+
+  watch(
+    [uiSettings, currentUser],
+    () => {
+      if (defaultLayoutChecked || !currentUser.value?.id) return;
+      defaultLayoutChecked = true;
+      if (uiSettings.value?.previously_used_conversation_display_type) return;
+      updateUISettings({
+        conversation_display_type: EXPANDED,
+        previously_used_conversation_display_type: EXPANDED,
+      });
+    },
+    { immediate: true }
+  );
+};
+
+// Test hook: the check runs once per page load.
+export const resetDefaultTicketLayoutCheck = () => {
+  defaultLayoutChecked = false;
+};
+
+/** Called once by ConversationList. */
+export const useTicketTable = list => {
+  provide(
+    TICKET_GROUPS_KEY,
+    computed(() => getTicketGroups(toValue(list)))
+  );
+  useDefaultTicketLayout();
+};
+
+// One minute ticker shared by every row, so relative times stay fresh
+// without a timer per row.
+export const useTicketClock = createSharedComposable(() =>
+  useNow({ interval: 60 * 1000 })
+);
