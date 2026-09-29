@@ -1,0 +1,52 @@
+// scss-lint:disable PropertySortOrder
+// FlightsMojo theme. Imported after Chatwoot's `next-colors`, so these
+// variables win. Only CSS variables are overridden here, never Chatwoot
+// class names: a renamed class upstream would break an override silently.
+//
+// Chatwoot's accent is its 12-step blue scale (plus `n-brand`, which
+// theme/colors.js points at --blue-9). We swap the scale for Radix "tomato"
+// with step 9 set to the logo colour #EF4123, so buttons, links, focus rings
+// and tints follow the logo while keeping the same step-to-step contrast.
+@layer base {
+  :root {
+    --blue-1: 255 252 252;
+    --blue-2: 255 248 247;
+    --blue-3: 254 235 231;
+    --blue-4: 255 220 211;
+    --blue-5: 255 205 194;
+    --blue-6: 253 189 175;
+    --blue-7: 245 168 152;
+    --blue-8: 236 142 123;
+    --blue-9: 239 65 35;
+    --blue-10: 221 68 37;
+    --blue-11: 209 52 21;
+    --blue-12: 92 39 31;
+
+    --text-blue: 44 17 13;
+    --border-blue-strong: 94 28 22;
+    --solid-blue: 255 220 211;
+    --solid-blue-2: 255 252 252;
+    --border-blue: 239, 65, 35, 0.5;
+  }
+
+  .dark {
+    --blue-1: 24 17 17;
+    --blue-2: 31 21 19;
+    --blue-3: 57 23 20;
+    --blue-4: 78 21 17;
+    --blue-5: 94 28 22;
+    --blue-6: 110 41 32;
+    --blue-7: 133 58 45;
+    --blue-8: 172 77 57;
+    --blue-9: 239 65 35;
+    --blue-10: 236 97 66;
+    --blue-11: 255 151 125;
+    --blue-12: 251 211 203;
+
+    --text-blue: 253 222 216;
+    --border-blue-strong: 255 205 194;
+    --solid-blue: 78 21 17;
+    --solid-blue-2: 34 27 26;
+    --border-blue: 239, 65, 35, 0.5;
+  }
+}
