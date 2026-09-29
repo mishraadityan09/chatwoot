@@ -156,7 +156,7 @@ const selectedModel = computed({
   </div>
   <FmTicketGrid
     data-test-id="ticket-row"
-    class="conversation relative cursor-pointer h-12 text-sm border-b border-n-slate-3"
+    class="conversation relative cursor-pointer h-10 text-sm border-b border-n-slate-3"
     :class="{
       'active bg-n-alpha-1 dark:bg-n-alpha-3': isActiveChat,
       'selected bg-n-slate-2 dark:bg-n-slate-3': selected,
