@@ -10,7 +10,7 @@ import { useMapGetter } from 'dashboard/composables/store';
 import { dynamicTime, shortTimestamp } from 'shared/helpers/timeHelper';
 import Button from 'dashboard/components-next/button/Button.vue';
 import FmTicketGrid from './FmTicketGrid.vue';
-import { endPlay, usePlayQueue } from '../play/usePlayQueue';
+import { usePlayQueue } from '../play/usePlayQueue';
 import { TICKET_HEADER_HEIGHT_KEY, useTicketClock } from './ticketTable';
 
 const props = defineProps({
@@ -21,13 +21,14 @@ const props = defineProps({
 
 const { t } = useI18n();
 const route = useRoute();
-const { isPlaying, play } = usePlayQueue();
+const { isPlaying, play, leave } = usePlayQueue();
 
-// Back on the list (no ticket open) ends Play mode.
+// Back on the list (no ticket open) ends Play mode, giving back a ticket
+// Play claimed if the agent left it untouched.
 watch(
   () => route.params.conversation_id ?? route.params.conversationId,
   id => {
-    if (!id && isPlaying.value) endPlay();
+    if (!id && isPlaying.value) leave();
   }
 );
 

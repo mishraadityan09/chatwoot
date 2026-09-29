@@ -6,6 +6,7 @@ const stats = ref({ allCount: 138, updatedOn: new Date() });
 
 vi.mock('dashboard/composables/store', () => ({
   useMapGetter: () => stats,
+  useStore: () => ({ dispatch: vi.fn(), getters: {} }),
 }));
 vi.mock('vue-router', () => ({
   useRoute: () => ({ params: {}, name: 'folder_conversations' }),
