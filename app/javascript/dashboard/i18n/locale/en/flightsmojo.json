@@ -46,6 +46,13 @@
       "NEXT": "Next ticket",
       "STOP": "Stop",
       "REMAINING": "{count} left"
+    },
+    "TABS": {
+      "LABEL": "Open tickets",
+      "VIEWS": "Views",
+      "TICKET": "Ticket",
+      "ID": "#{id}",
+      "CLOSE": "Close tab"
     }
   }
 }
