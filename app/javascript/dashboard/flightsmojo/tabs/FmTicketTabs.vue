@@ -90,11 +90,11 @@ const onAuxClick = (event, tab) => {
       <button
         type="button"
         data-test-id="ticket-tab-close"
-        class="flex items-center justify-center size-5 rounded flex-shrink-0 text-n-slate-10 hover:bg-n-alpha-2 hover:text-n-slate-12"
+        class="flex items-center justify-center size-5 p-0 rounded flex-shrink-0 text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
         :aria-label="t('FLIGHTSMOJO.TABS.CLOSE')"
         @click.stop="close(tab.id)"
       >
-        <Icon icon="i-lucide-x" class="size-3.5" />
+        <Icon icon="i-lucide-x" class="size-3.5 flex-shrink-0" />
       </button>
     </div>
   </div>
