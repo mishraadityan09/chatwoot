@@ -42,7 +42,8 @@ const showExpandedCards = computed(
 
 useChatListKeyboardEvents(conversationListRef);
 const { headerHeight: fmTicketHeaderHeight } = useTicketTable(
-  () => props.conversationList
+  () => props.conversationList,
+  { loadMore: () => emit('loadMore') }
 );
 
 const intersectionObserverOptions = computed(() => ({

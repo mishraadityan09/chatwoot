@@ -12,7 +12,7 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const { isPlaying, next, stop, remainingCount } = usePlayQueue();
+const { isPlaying, isLoadingNext, next, stop, remainingCount } = usePlayQueue();
 const remaining = computed(() => remainingCount(props.conversationId));
 </script>
 
@@ -42,6 +42,8 @@ const remaining = computed(() => remainingCount(props.conversationId));
       size="sm"
       icon="i-lucide-skip-forward"
       :label="t('FLIGHTSMOJO.PLAY.NEXT')"
+      :is-loading="isLoadingNext"
+      :disabled="isLoadingNext"
       @click="next(conversationId)"
     />
   </div>

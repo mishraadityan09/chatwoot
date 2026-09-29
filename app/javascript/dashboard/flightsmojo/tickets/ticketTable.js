@@ -117,17 +117,20 @@ export const resetDefaultTicketLayoutCheck = () => {
 
 /**
  * Called once by ConversationList.
+ * @param list - the rendered conversations (getter or ref)
+ * @param {{ loadMore?: Function }} options - asks the list for its next page
+ *   (Play continues past the loaded tickets)
  * @returns {{ headerHeight: import('vue').Ref<number> }} for the
  *   Virtualizer's start-margin
  */
-export const useTicketTable = list => {
+export const useTicketTable = (list, options = {}) => {
   provide(
     TICKET_GROUPS_KEY,
     computed(() => getTicketGroups(toValue(list)))
   );
   const headerHeight = ref(0);
   provide(TICKET_HEADER_HEIGHT_KEY, headerHeight);
-  setPlayLiveList(list);
+  setPlayLiveList(list, options);
   useDefaultTicketLayout();
   return { headerHeight };
 };
