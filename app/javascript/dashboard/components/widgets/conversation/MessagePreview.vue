@@ -18,6 +18,12 @@ export default {
       type: String,
       default: '',
     },
+    // FlightsMojo: the card shows the ticket subject on its own row, so the
+    // preview shows the message body instead of the email subject.
+    preferBody: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const { getPlainText } = useMessageFormatter();
@@ -41,6 +47,9 @@ export default {
     parsedLastMessage() {
       const { content_attributes: contentAttributes } = this.message;
       const { email: { subject } = {} } = contentAttributes || {};
+      if (this.preferBody && this.message.content) {
+        return this.getPlainText(this.message.content);
+      }
       return this.getPlainText(subject || this.message.content);
     },
     lastMessageFileType() {

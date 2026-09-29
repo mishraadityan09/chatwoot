@@ -12,6 +12,7 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+import { getTicketSubject } from 'dashboard/flightsmojo/helpers/ticket';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -38,6 +39,8 @@ const hovered = ref(false);
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
+// FlightsMojo: ticket subject row (email / website tickets), Zendesk-style.
+const ticketSubject = computed(() => getTicketSubject(props.chat));
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -72,7 +75,10 @@ const showLabelsSection = computed(() => {
 
 const messagePreviewClass = computed(() => {
   return [
-    hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
+    // FlightsMojo: with a subject row, the body stays secondary when unread.
+    hasUnread.value && !ticketSubject.value
+      ? 'font-medium text-n-slate-12'
+      : 'text-n-slate-11',
     !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
     props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
   ];
@@ -184,6 +190,16 @@ watch(
       >
         {{ currentContact.name }}
       </h4>
+      <!-- FlightsMojo: ticket subject; the preview below then shows the body -->
+      <p
+        v-if="ticketSubject"
+        data-test-id="conversation-subject"
+        class="text-sm my-0 mx-2 leading-5 truncate min-w-0 text-n-slate-12"
+        :class="hasUnread ? 'font-medium ltr:pr-6 rtl:pl-6' : 'font-normal'"
+        :title="ticketSubject"
+      >
+        {{ ticketSubject }}
+      </p>
       <VoiceCallStatus
         v-if="voiceCallData.status"
         key="voice-status-row"
@@ -195,6 +211,7 @@ watch(
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
+        :prefer-body="!!ticketSubject"
         class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
         :class="messagePreviewClass"
       />
