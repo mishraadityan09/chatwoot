@@ -6,6 +6,7 @@ import { createSharedComposable, useNow } from '@vueuse/core';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import wootConstants from 'dashboard/constants/globals';
+import { setPlayLiveList } from '../play/usePlayQueue';
 
 export const TICKET_GROUPS_KEY = Symbol('fmTicketGroups');
 // Height of the sticky table header, measured by FmTicketTableHeader. The
@@ -126,6 +127,7 @@ export const useTicketTable = list => {
   );
   const headerHeight = ref(0);
   provide(TICKET_HEADER_HEIGHT_KEY, headerHeight);
+  setPlayLiveList(list);
   useDefaultTicketLayout();
   return { headerHeight };
 };

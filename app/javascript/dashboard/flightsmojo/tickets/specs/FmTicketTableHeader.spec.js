@@ -7,6 +7,10 @@ const stats = ref({ allCount: 138, updatedOn: new Date() });
 vi.mock('dashboard/composables/store', () => ({
   useMapGetter: () => stats,
 }));
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ params: {}, name: 'folder_conversations' }),
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 const byTestId = (wrapper, id) => wrapper.find(`[data-test-id="${id}"]`);
 
@@ -69,5 +73,17 @@ describe('FmTicketTableHeader', () => {
     ].forEach(column =>
       expect(text).toContain(`FLIGHTSMOJO.TICKETS.COLUMNS.${column}`)
     );
+  });
+
+  it('offers Play, disabled on an empty view', () => {
+    const empty = mount(FmTicketTableHeader, { props: { loadedCount: 0 } });
+    const filled = mount(FmTicketTableHeader, { props: { loadedCount: 3 } });
+
+    expect(
+      empty.find('[data-test-id="ticket-play"]').attributes('disabled')
+    ).toBeDefined();
+    expect(
+      filled.find('[data-test-id="ticket-play"]').attributes('disabled')
+    ).toBeUndefined();
   });
 });

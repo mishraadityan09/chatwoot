@@ -39,6 +39,13 @@
       "EMPTY_VALUE": "—",
       "ROW_ACTIONS": "More actions",
       "MORE_LABELS": "+{count}"
+    },
+    "PLAY": {
+      "START": "Play",
+      "START_TOOLTIP": "Work through this view ticket by ticket, in list order",
+      "NEXT": "Next ticket",
+      "STOP": "Stop",
+      "REMAINING": "{count} left"
     }
   }
 }
