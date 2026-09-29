@@ -7,6 +7,8 @@
 // theme/colors.js points at --blue-9). We swap the scale for Radix "tomato"
 // with step 9 set to the logo colour #EF4123, so buttons, links, focus rings
 // and tints follow the logo while keeping the same step-to-step contrast.
+// --solid-blue (agent message bubbles, among others) is one step softer than
+// the strict mapping: a saturated peach/maroon bubble read like an error.
 @layer base {
   :root {
     --blue-1: 255 252 252;
@@ -24,7 +26,7 @@
 
     --text-blue: 44 17 13;
     --border-blue-strong: 94 28 22;
-    --solid-blue: 255 220 211;
+    --solid-blue: 254 235 231;
     --solid-blue-2: 255 252 252;
     --border-blue: 239, 65, 35, 0.5;
   }
@@ -45,7 +47,7 @@
 
     --text-blue: 253 222 216;
     --border-blue-strong: 255 205 194;
-    --solid-blue: 78 21 17;
+    --solid-blue: 57 23 20;
     --solid-blue-2: 34 27 26;
     --border-blue: 239, 65, 35, 0.5;
   }
