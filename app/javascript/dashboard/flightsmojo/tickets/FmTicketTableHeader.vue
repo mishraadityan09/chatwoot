@@ -2,12 +2,13 @@
 // FlightsMojo: sticky header of the ticket table: a summary line
 // ("12 of 138 tickets · Updated just now") and the column titles, on the same
 // grid as FmTicketRow. Rendered by ConversationList in the expanded layout.
-import { computed } from 'vue';
+import { computed, inject, onBeforeUnmount, useTemplateRef } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import { dynamicTime, shortTimestamp } from 'shared/helpers/timeHelper';
 import FmTicketGrid from './FmTicketGrid.vue';
-import { useTicketClock } from './ticketTable';
+import { TICKET_HEADER_HEIGHT_KEY, useTicketClock } from './ticketTable';
 
 const props = defineProps({
   loadedCount: { type: Number, default: 0 },
@@ -16,6 +17,18 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+
+// Report our height to ConversationList for the Virtualizer's start-margin.
+const headerHeight = inject(TICKET_HEADER_HEIGHT_KEY, null);
+const tableHeader = useTemplateRef('tableHeader');
+useResizeObserver(tableHeader, () => {
+  if (headerHeight && tableHeader.value) {
+    headerHeight.value = tableHeader.value.offsetHeight;
+  }
+});
+onBeforeUnmount(() => {
+  if (headerHeight) headerHeight.value = 0;
+});
 const now = useTicketClock();
 const stats = useMapGetter('conversationStats/getStats');
 
@@ -45,6 +58,7 @@ const updated = computed(() => {
 
 <template>
   <div
+    ref="tableHeader"
     data-test-id="ticket-table-header"
     class="sticky top-0 z-20 bg-n-surface-1"
   >

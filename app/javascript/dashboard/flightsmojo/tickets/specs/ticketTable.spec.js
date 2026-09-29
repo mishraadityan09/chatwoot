@@ -1,10 +1,14 @@
+/* eslint-disable vue/one-component-per-file -- tiny test harness components */
 import { defineComponent, h, nextTick, ref } from 'vue';
 import { mount } from '@vue/test-utils';
+import { inject } from 'vue';
 import {
+  TICKET_HEADER_HEIGHT_KEY,
   getTicketGroups,
   priorityKey,
   resetDefaultTicketLayoutCheck,
   useDefaultTicketLayout,
+  useTicketTable,
 } from '../ticketTable';
 
 const uiSettings = ref({});
@@ -150,5 +154,30 @@ describe('useDefaultTicketLayout', () => {
     mountHook();
 
     expect(updateUISettings).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useTicketTable', () => {
+  it('shares one header height between the header and the list', () => {
+    let fromList;
+    let fromHeader;
+    const Header = defineComponent({
+      setup() {
+        fromHeader = inject(TICKET_HEADER_HEIGHT_KEY);
+        return () => h('div');
+      },
+    });
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          fromList = useTicketTable(() => []).headerHeight;
+          return () => h(Header);
+        },
+      })
+    );
+
+    fromHeader.value = 62;
+    expect(fromList.value).toBe(62);
+    wrapper.unmount();
   });
 });

@@ -41,7 +41,9 @@ const showExpandedCards = computed(
 );
 
 useChatListKeyboardEvents(conversationListRef);
-useTicketTable(() => props.conversationList);
+const { headerHeight: fmTicketHeaderHeight } = useTicketTable(
+  () => props.conversationList
+);
 
 const intersectionObserverOptions = computed(() => ({
   root: conversationListRef.value,
@@ -76,6 +78,7 @@ defineExpose({ conversationListRef });
       ref="virtualListRef"
       v-slot="{ item }"
       :data="conversationList"
+      :start-margin="showExpandedCards ? fmTicketHeaderHeight : 0"
       class="[&>div:has(+_div_.active)>*]:!border-n-surface-1 [&>div:has(+_div_.selected)>*]:!border-n-surface-1"
     >
       <ConversationItem

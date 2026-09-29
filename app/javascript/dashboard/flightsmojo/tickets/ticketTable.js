@@ -1,13 +1,19 @@
 // FlightsMojo: state shared by the Zendesk-style ticket table. The table is
 // Chatwoot's expanded conversation layout with our FmTicketRow in place of
 // ConversationCardExpanded; ConversationList calls useTicketTable once.
-import { computed, inject, provide, toValue, watch } from 'vue';
+import { computed, inject, provide, ref, toValue, watch } from 'vue';
 import { createSharedComposable, useNow } from '@vueuse/core';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import wootConstants from 'dashboard/constants/globals';
 
 export const TICKET_GROUPS_KEY = Symbol('fmTicketGroups');
+// Height of the sticky table header, measured by FmTicketTableHeader. The
+// header sits inside the list's scroll container *before* the Virtualizer,
+// so the Virtualizer needs it as startMargin (virtua: "If you put an element
+// before virtualizer, you have to set its height to this prop") — without it
+// virtua renders the wrong range: blank areas, bursts of page loads, jumps.
+export const TICKET_HEADER_HEIGHT_KEY = Symbol('fmTicketHeaderHeight');
 
 // Highest first, matching Chatwoot's priority_desc sort.
 export const PRIORITY_KEYS = ['URGENT', 'HIGH', 'MEDIUM', 'LOW', 'NONE'];
@@ -108,13 +114,20 @@ export const resetDefaultTicketLayoutCheck = () => {
   defaultLayoutChecked = false;
 };
 
-/** Called once by ConversationList. */
+/**
+ * Called once by ConversationList.
+ * @returns {{ headerHeight: import('vue').Ref<number> }} for the
+ *   Virtualizer's start-margin
+ */
 export const useTicketTable = list => {
   provide(
     TICKET_GROUPS_KEY,
     computed(() => getTicketGroups(toValue(list)))
   );
+  const headerHeight = ref(0);
+  provide(TICKET_HEADER_HEIGHT_KEY, headerHeight);
   useDefaultTicketLayout();
+  return { headerHeight };
 };
 
 // One minute ticker shared by every row, so relative times stay fresh
