@@ -77,9 +77,11 @@ const updated = computed(() => {
     class="sticky top-0 z-20 bg-n-surface-1"
   >
     <div
-      class="flex items-center justify-between gap-3 px-3 pt-2 pb-1.5 text-xs text-n-slate-11"
+      class="flex items-center justify-between gap-3 px-3 pt-2 pb-1.5 text-xs font-420 text-n-slate-10"
     >
-      <span data-test-id="ticket-summary" class="truncate">{{ summary }}</span>
+      <span data-test-id="ticket-summary" class="truncate tabular-nums">{{
+        summary
+      }}</span>
       <div class="flex items-center gap-3 flex-shrink-0">
         <span data-test-id="ticket-updated">{{ updated }}</span>
         <Button
@@ -94,7 +96,7 @@ const updated = computed(() => {
       </div>
     </div>
     <FmTicketGrid
-      class="h-8 text-xs font-medium text-n-slate-11 border-y border-n-weak"
+      class="h-8 text-xs font-520 tracking-[0.01em] text-n-slate-10 border-y border-n-weak"
     >
       <span />
       <span class="truncate">{{

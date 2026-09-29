@@ -48,7 +48,7 @@ const onAuxClick = (event, tab) => {
       role="tab"
       data-test-id="ticket-tab-views"
       :aria-selected="isOnList"
-      class="flex items-center gap-1.5 h-7 px-2.5 rounded-md text-sm flex-shrink-0"
+      class="flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[13px] font-460 flex-shrink-0"
       :class="
         isOnList
           ? 'bg-n-solid-1 text-n-slate-12 font-medium shadow-sm'
@@ -67,7 +67,7 @@ const onAuxClick = (event, tab) => {
       data-test-id="ticket-tab"
       :aria-selected="tab.id === activeId"
       :title="titleOf(tab)"
-      class="group flex items-center gap-1.5 h-7 ps-2.5 pe-1 rounded-md text-sm max-w-52 min-w-0 flex-shrink-0 cursor-pointer select-none"
+      class="group flex items-center gap-1.5 h-7 ps-2.5 pe-1 rounded-md text-[13px] font-440 tracking-[-0.13px] max-w-52 min-w-0 flex-shrink-0 cursor-pointer select-none"
       :class="
         tab.id === activeId
           ? 'bg-n-solid-1 text-n-slate-12 shadow-sm'
@@ -80,11 +80,13 @@ const onAuxClick = (event, tab) => {
       <span class="size-2 rounded-full flex-shrink-0" :class="dotOf(tab)" />
       <span
         class="truncate"
-        :class="isUnread(tab) ? 'font-semibold text-n-slate-12' : ''"
+        :class="
+          isUnread(tab) || tab.id === activeId ? 'font-520 text-n-slate-12' : ''
+        "
       >
         {{ labelOf(tab) }}
       </span>
-      <span class="text-xs text-n-slate-10 flex-shrink-0">
+      <span class="text-xs text-n-slate-10 flex-shrink-0 tabular-nums">
         {{ t('FLIGHTSMOJO.TABS.ID', { id: tab.id }) }}
       </span>
       <button

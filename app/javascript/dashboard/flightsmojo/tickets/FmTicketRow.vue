@@ -148,15 +148,15 @@ const selectedModel = computed({
   <div
     v-if="group"
     data-test-id="ticket-group-header"
-    class="flex items-center gap-2 px-3 pt-4 pb-1.5 text-xs font-medium text-n-slate-11 border-b border-n-weak"
+    class="flex items-center gap-2 px-3 pt-4 pb-1.5 text-xs font-520 tracking-[0.01em] text-n-slate-11 border-b border-n-weak"
   >
     <CardPriorityIcon :priority="chat.priority" show-empty />
     <span class="text-n-slate-12">{{ groupLabel }}</span>
-    <span>{{ group.count }}</span>
+    <span class="font-420 text-n-slate-10 tabular-nums">{{ group.count }}</span>
   </div>
   <FmTicketGrid
     data-test-id="ticket-row"
-    class="conversation relative cursor-pointer h-10 text-sm border-b border-n-slate-3"
+    class="conversation relative cursor-pointer h-10 text-[13px] leading-5 font-420 tracking-[-0.13px] border-b border-n-slate-3"
     :class="{
       'active bg-n-alpha-1 dark:bg-n-alpha-3': isActiveChat,
       'selected bg-n-slate-2 dark:bg-n-slate-3': selected,
@@ -172,7 +172,7 @@ const selectedModel = computed({
     <div class="min-w-0">
       <span
         data-test-id="ticket-status"
-        class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium truncate max-w-full"
+        class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-460 tracking-normal truncate max-w-full"
         :class="statusClass"
       >
         {{ statusLabel }}
@@ -182,10 +182,10 @@ const selectedModel = computed({
     <div class="flex items-center gap-2 min-w-0">
       <span
         data-test-id="ticket-subject"
-        class="truncate min-w-0"
+        class="truncate min-w-0 text-sm tracking-[-0.2px]"
         :class="[
           subject ? 'text-n-slate-12' : 'text-n-slate-11',
-          hasUnread ? 'font-semibold' : 'font-normal',
+          hasUnread ? 'font-520' : subject ? 'font-460' : 'font-420',
         ]"
         :title="subject || previewText"
       >
@@ -198,7 +198,7 @@ const selectedModel = computed({
         :title="chat.labels.join(', ')"
       >
         <span
-          class="inline-flex items-center gap-1 h-5 px-1.5 min-w-0 rounded-md border border-n-weak text-xs text-n-slate-11"
+          class="inline-flex items-center gap-1 h-5 px-1.5 min-w-0 rounded-md border border-n-weak text-xs font-440 tracking-normal text-n-slate-11"
         >
           <span
             class="size-2 rounded-sm flex-shrink-0 bg-n-slate-8"
@@ -235,13 +235,13 @@ const selectedModel = computed({
         :size="20"
         hide-offline-status
       />
-      <span class="truncate text-n-slate-12 capitalize">
+      <span class="truncate text-n-slate-12 font-440 capitalize">
         {{ currentContact.name }}
       </span>
     </div>
 
     <div
-      class="hidden xl:block truncate text-n-slate-11"
+      class="hidden xl:block truncate text-n-slate-11 tabular-nums"
       :title="requestedTitle"
     >
       {{ requestedAt }}
@@ -256,7 +256,7 @@ const selectedModel = computed({
 
     <div
       class="hidden xl:block truncate capitalize"
-      :class="teamName ? 'text-n-slate-12' : 'text-n-slate-10'"
+      :class="teamName ? 'text-n-slate-11' : 'text-n-slate-10'"
     >
       {{ teamName || $t('FLIGHTSMOJO.TICKETS.EMPTY_VALUE') }}
     </div>
@@ -270,7 +270,7 @@ const selectedModel = computed({
           :status="assignee.availability_status"
           hide-offline-status
         />
-        <span class="truncate text-n-slate-12">{{ assignee.name }}</span>
+        <span class="truncate text-n-slate-11">{{ assignee.name }}</span>
       </template>
       <span v-else class="text-n-slate-10">
         {{ $t('FLIGHTSMOJO.TICKETS.EMPTY_VALUE') }}
@@ -281,7 +281,7 @@ const selectedModel = computed({
       <InboxName v-if="showChannel" :inbox="inbox" class="min-w-0" />
     </div>
 
-    <div class="truncate text-n-slate-11 text-end">
+    <div class="truncate text-n-slate-11 text-end tabular-nums">
       {{ updatedAt }}
     </div>
 
