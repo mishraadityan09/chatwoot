@@ -82,19 +82,53 @@ describe('useDefaultTicketLayout', () => {
     currentUser.value = { id: 1 };
   });
 
-  it('switches an agent who never chose a layout to the table', () => {
+  it('gives a new agent the table, sorted by priority then oldest', () => {
     mountHook();
 
     expect(updateUISettings).toHaveBeenCalledWith({
+      flightsmojo_defaults_version: 1,
       conversation_display_type: 'expanded',
       previously_used_conversation_display_type: 'expanded',
+      conversations_filter_by: { order_by: 'priority_desc_created_at_asc' },
     });
   });
 
-  it('keeps a layout the agent chose', () => {
+  it('keeps a layout and sort the agent chose, recording that it checked', () => {
     uiSettings.value = {
       conversation_display_type: 'condensed',
       previously_used_conversation_display_type: 'condensed',
+      conversations_filter_by: { status: 'open', order_by: 'created_at_asc' },
+    };
+    mountHook();
+
+    expect(updateUISettings).toHaveBeenCalledWith({
+      flightsmojo_defaults_version: 1,
+    });
+  });
+
+  it("replaces Chatwoot's default sort, keeping the status filter", () => {
+    uiSettings.value = {
+      previously_used_conversation_display_type: 'condensed',
+      conversations_filter_by: {
+        status: 'pending',
+        order_by: 'last_activity_at_desc',
+      },
+    };
+    mountHook();
+
+    expect(updateUISettings).toHaveBeenCalledWith({
+      flightsmojo_defaults_version: 1,
+      conversations_filter_by: {
+        status: 'pending',
+        order_by: 'priority_desc_created_at_asc',
+      },
+    });
+  });
+
+  it('never runs again once an agent has had the defaults', () => {
+    uiSettings.value = {
+      flightsmojo_defaults_version: 1,
+      conversations_filter_by: { order_by: 'last_activity_at_desc' },
     };
     mountHook();
 

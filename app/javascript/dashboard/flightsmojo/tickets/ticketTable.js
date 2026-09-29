@@ -52,26 +52,52 @@ export const useTicketGroup = chatId => {
   return computed(() => groups?.value.get(toValue(chatId)) || null);
 };
 
-// Agents who never picked a layout land on the table. Anyone who chose one
-// (previously_used_conversation_display_type is set by both layout toggles)
-// keeps it. Writing both keys explicitly keeps every upstream reader of
-// conversation_display_type (which default to "condensed") consistent.
+// Zendesk-style defaults, applied ONCE per agent (recorded in their UI
+// settings as flightsmojo_defaults_version, so later choices always stick):
+// - Layout: agents who never picked one land on the table. Anyone who chose
+//   (previously_used_conversation_display_type is set by both layout toggles)
+//   keeps it. Both keys are written so every upstream reader of
+//   conversation_display_type (which default to "condensed") agrees.
+// - Sort: agents with no sort, or Chatwoot's default "Last activity" (which
+//   the status filter saves even when nobody chose it), get "Priority: Highest
+//   first, Created: Oldest first", so the table opens grouped by priority,
+//   oldest first. Any other saved sort was a deliberate choice and is kept.
+//   Stored where the sort menu stores it (conversations_filter_by.order_by);
+//   ChatList reads it in onMounted, after this runs in ConversationList's
+//   setup, so it applies on the first load.
+export const DEFAULTS_VERSION = 1;
 let defaultLayoutChecked = false;
 export const useDefaultTicketLayout = () => {
   const { uiSettings, updateUISettings } = useUISettings();
   const currentUser = useMapGetter('getCurrentUser');
   const { EXPANDED } = wootConstants.LAYOUT_TYPES;
+  const { PRIORITY_DESC_CREATED_AT_ASC, LAST_ACTIVITY_AT_DESC } =
+    wootConstants.SORT_BY_TYPE;
 
   watch(
     [uiSettings, currentUser],
     () => {
       if (defaultLayoutChecked || !currentUser.value?.id) return;
       defaultLayoutChecked = true;
-      if (uiSettings.value?.previously_used_conversation_display_type) return;
-      updateUISettings({
-        conversation_display_type: EXPANDED,
-        previously_used_conversation_display_type: EXPANDED,
-      });
+
+      const settings = uiSettings.value || {};
+      if ((settings.flightsmojo_defaults_version || 0) >= DEFAULTS_VERSION) {
+        return;
+      }
+
+      const updates = { flightsmojo_defaults_version: DEFAULTS_VERSION };
+      if (!settings.previously_used_conversation_display_type) {
+        updates.conversation_display_type = EXPANDED;
+        updates.previously_used_conversation_display_type = EXPANDED;
+      }
+      const filterBy = settings.conversations_filter_by || {};
+      if (!filterBy.order_by || filterBy.order_by === LAST_ACTIVITY_AT_DESC) {
+        updates.conversations_filter_by = {
+          ...filterBy,
+          order_by: PRIORITY_DESC_CREATED_AT_ASC,
+        };
+      }
+      updateUISettings(updates);
     },
     { immediate: true }
   );
