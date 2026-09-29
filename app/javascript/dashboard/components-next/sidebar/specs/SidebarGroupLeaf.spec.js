@@ -52,12 +52,18 @@ describe('SidebarGroupLeaf', () => {
     );
   });
 
+  // FlightsMojo: badges show exact counts; only five-digit counts are capped.
   it('caps large unread counts', () => {
-    const wrapper = mountLeaf({ badgeCount: 120 });
-
-    expect(wrapper.find('[data-test-id="sidebar-unread-badge"]').text()).toBe(
-      '99+'
-    );
+    expect(
+      mountLeaf({ badgeCount: 868 })
+        .find('[data-test-id="sidebar-unread-badge"]')
+        .text()
+    ).toBe('868');
+    expect(
+      mountLeaf({ badgeCount: 12000 })
+        .find('[data-test-id="sidebar-unread-badge"]')
+        .text()
+    ).toBe('9999+');
   });
 
   it('passes unread count to custom leaf components', () => {
