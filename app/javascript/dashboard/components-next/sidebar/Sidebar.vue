@@ -23,6 +23,8 @@ import EmojiIcon from 'next/emoji-icon-picker/EmojiIcon.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
 import ComposeConversation from 'dashboard/components-next/NewConversation/ComposeConversation.vue';
+// FlightsMojo: Zendesk-style ticket counts on folders.
+import { useFolderCounts } from 'dashboard/flightsmojo/folders/useFolderCounts';
 import {
   SIDEBAR_SORT_SECTIONS,
   getSidebarSortOptions,
@@ -249,6 +251,7 @@ const contactCustomViews = useMapGetter('customViews/getContactCustomViews');
 const conversationCustomViews = useMapGetter(
   'customViews/getConversationCustomViews'
 );
+const { getFolderCount } = useFolderCounts(conversationCustomViews);
 const getSidebarSectionSort = useMapGetter(
   'sidebarSortPreferences/getSectionSort'
 );
@@ -433,9 +436,8 @@ const menuItems = computed(() => {
           children: sortedFolders.value.map(view => ({
             name: `${view.name}-${view.id}`,
             label: view.name,
-            badgeCount: hasFilteredUnreadCounts.value
-              ? getFolderUnreadCount.value(view.id)
-              : 0,
+            // FlightsMojo: total matching tickets, not upstream's unread count.
+            badgeCount: getFolderCount(view.id),
             to: accountScopedRoute('folder_conversations', { id: view.id }),
           })),
         },
