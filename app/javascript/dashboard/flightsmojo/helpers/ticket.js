@@ -1,6 +1,8 @@
 // FlightsMojo: ticket-level facts shared by the conversation card and the
 // ticket table. Reads data the conversation payload already carries; no API.
 
+const clean = value => (typeof value === 'string' ? value.trim() : '');
+
 /**
  * The ticket's subject line, or '' when it has none.
  * Email conversations carry it in `additional_attributes.mail_subject` (set by
@@ -12,6 +14,5 @@
 export const getTicketSubject = chat => {
   const { mail_subject: mailSubject, subject } =
     chat?.additional_attributes || {};
-  const value = mailSubject || subject;
-  return typeof value === 'string' ? value.trim() : '';
+  return clean(mailSubject) || clean(subject);
 };

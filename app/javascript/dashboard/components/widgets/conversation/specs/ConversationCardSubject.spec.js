@@ -71,7 +71,7 @@ describe('ConversationCard ticket subject', () => {
       additional_attributes: { subject: 'Baggage allowance' },
     });
 
-    expect(subjectRow(wrapper).classes()).toContain('ltr:pr-6');
+    expect(subjectRow(wrapper).classes()).toContain('pe-6');
     expect(subjectRow(wrapper).classes()).toContain('font-medium');
   });
 

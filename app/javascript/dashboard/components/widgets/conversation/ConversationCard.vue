@@ -195,7 +195,7 @@ watch(
         v-if="ticketSubject"
         data-test-id="conversation-subject"
         class="text-sm my-0 mx-2 leading-5 truncate min-w-0 text-n-slate-12"
-        :class="hasUnread ? 'font-medium ltr:pr-6 rtl:pl-6' : 'font-normal'"
+        :class="hasUnread ? 'font-medium pe-6' : 'font-normal'"
         :title="ticketSubject"
       >
         {{ ticketSubject }}

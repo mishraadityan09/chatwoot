@@ -35,6 +35,14 @@ describe('getTicketSubject', () => {
     expect(getTicketSubject(undefined)).toBe('');
   });
 
+  it('falls back to the API subject when the email subject is blank', () => {
+    expect(
+      getTicketSubject({
+        additional_attributes: { mail_subject: '  ', subject: 'Name change' },
+      })
+    ).toBe('Name change');
+  });
+
   it('ignores non-string values', () => {
     expect(
       getTicketSubject({ additional_attributes: { subject: { x: 1 } } })
