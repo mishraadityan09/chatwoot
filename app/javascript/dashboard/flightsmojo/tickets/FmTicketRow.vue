@@ -288,11 +288,11 @@ const selectedModel = computed({
     <div class="flex items-center justify-end">
       <button
         type="button"
-        class="flex items-center justify-center size-7 rounded-md text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
+        class="flex items-center justify-center size-7 p-0 rounded-md text-n-slate-11 hover:bg-n-alpha-2 hover:text-n-slate-12"
         :aria-label="$t('FLIGHTSMOJO.TICKETS.ROW_ACTIONS')"
         @click.stop="emit('contextmenu', $event)"
       >
-        <Icon icon="i-lucide-ellipsis-vertical" class="size-4" />
+        <Icon icon="i-lucide-ellipsis-vertical" class="size-4 flex-shrink-0" />
       </button>
     </div>
   </FmTicketGrid>
