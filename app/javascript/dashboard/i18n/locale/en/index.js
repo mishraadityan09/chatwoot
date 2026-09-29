@@ -18,6 +18,8 @@ import csatMgmt from './csatMgmt.json';
 import customRole from './customRole.json';
 import datePicker from './datePicker.json';
 import emoji from './emoji.json';
+// FlightsMojo: our own strings, so upstream locale files stay untouched.
+import flightsmojo from './flightsmojo.json';
 import general from './general.json';
 import generalSettings from './generalSettings.json';
 import helpCenter from './helpCenter.json';
@@ -66,6 +68,7 @@ export default {
   ...customRole,
   ...datePicker,
   ...emoji,
+  ...flightsmojo,
   ...general,
   ...generalSettings,
   ...helpCenter,

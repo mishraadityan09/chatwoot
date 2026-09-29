@@ -119,7 +119,7 @@ const bookingId = computed(() => {
 const copyBookingId = async () => {
   try {
     await copyTextToClipboard(String(bookingId.value));
-    useAlert(t('CONVERSATION.HEADER.BOOKING_ID_COPY_SUCCESS'));
+    useAlert(t('FLIGHTSMOJO.BOOKING_ID.COPY_SUCCESS'));
   } catch (error) {
     // error
   }
@@ -162,12 +162,12 @@ const copyBookingId = async () => {
           />
           <button
             v-if="bookingId"
-            v-tooltip="$t('CONVERSATION.HEADER.BOOKING_ID_COPY_TOOLTIP')"
+            v-tooltip="$t('FLIGHTSMOJO.BOOKING_ID.COPY_TOOLTIP')"
             type="button"
             class="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12 hover:bg-n-slate-4 cursor-pointer"
             @click="copyBookingId"
           >
-            {{ $t('CONVERSATION.HEADER.BOOKING_ID_CHIP', { id: bookingId }) }}
+            {{ $t('FLIGHTSMOJO.BOOKING_ID.CHIP', { id: bookingId }) }}
           </button>
         </div>
 

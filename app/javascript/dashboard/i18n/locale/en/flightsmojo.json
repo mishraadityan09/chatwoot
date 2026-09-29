@@ -1,0 +1,9 @@
+{
+  "FLIGHTSMOJO": {
+    "BOOKING_ID": {
+      "CHIP": "BK-{id}",
+      "COPY_TOOLTIP": "Click to copy booking ID",
+      "COPY_SUCCESS": "Booking ID copied to clipboard"
+    }
+  }
+}
