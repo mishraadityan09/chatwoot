@@ -52,3 +52,10 @@
     --border-blue: 239, 65, 35, 0.5;
   }
 }
+
+// Cmd+K command bar: commandbar.vue sets --ninja-accent-color on the
+// ninja-keys web component to a hard-coded Chatwoot blue. `:root` makes this
+// win regardless of stylesheet order; still a variable, not a class override.
+:root ninja-keys {
+  --ninja-accent-color: rgb(var(--blue-9));
+}
