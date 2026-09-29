@@ -62,8 +62,8 @@ describe('FmTicketRow', () => {
     expect(byTestId(wrapper, 'ticket-status').text()).toBe(
       'FLIGHTSMOJO.TICKETS.STATUS.OPEN'
     );
-    expect(byTestId(wrapper, 'ticket-status').classes()).toContain(
-      'bg-n-ruby-3'
+    expect(byTestId(wrapper, 'ticket-status-dot').classes()).toContain(
+      'bg-n-ruby-9'
     );
     expect(text).toContain('Fatima Khan');
     expect(text).toContain('FLIGHTSMOJO.TICKETS.PRIORITY.HIGH');
@@ -139,5 +139,18 @@ describe('FmTicketRow', () => {
 
     expect(wrapper.emitted('selectConversation')).toHaveLength(1);
     expect(wrapper.emitted('deSelectConversation')).toHaveLength(1);
+  });
+
+  it('shows unread as a quiet count, capped at 99+', () => {
+    expect(byTestId(mountRow(), 'ticket-unread').exists()).toBe(false);
+    expect(
+      byTestId(mountRow({ chat: { unread_count: 3 } }), 'ticket-unread').text()
+    ).toBe('3');
+    expect(
+      byTestId(
+        mountRow({ chat: { unread_count: 120 } }),
+        'ticket-unread'
+      ).text()
+    ).toBe('99+');
   });
 });

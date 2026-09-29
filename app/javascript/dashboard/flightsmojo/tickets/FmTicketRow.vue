@@ -20,7 +20,6 @@ import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import InboxName from 'dashboard/components-next/Conversation/InboxName.vue';
 import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
-import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard/UnreadBadge.vue';
 import FmTicketGrid from './FmTicketGrid.vue';
 import { getTicketSubject } from '../helpers/ticket';
 import { priorityKey, useTicketClock, useTicketGroup } from './ticketTable';
@@ -48,22 +47,21 @@ const { t } = useI18n();
 const { getPlainText } = useMessageFormatter();
 const now = useTicketClock();
 
+// Status = a coloured dot + the word (a filled pill on every row was the
+// loudest thing on the page).
 const STATUS_BADGES = {
-  open: {
-    key: 'FLIGHTSMOJO.TICKETS.STATUS.OPEN',
-    class: 'bg-n-ruby-3 text-n-ruby-11',
-  },
+  open: { key: 'FLIGHTSMOJO.TICKETS.STATUS.OPEN', class: 'bg-n-ruby-9' },
   pending: {
     key: 'FLIGHTSMOJO.TICKETS.STATUS.PENDING',
-    class: 'bg-n-amber-3 text-n-amber-11',
+    class: 'bg-n-amber-9',
   },
   snoozed: {
     key: 'FLIGHTSMOJO.TICKETS.STATUS.SNOOZED',
-    class: 'bg-n-slate-3 text-n-slate-11',
+    class: 'bg-n-slate-9',
   },
   resolved: {
     key: 'FLIGHTSMOJO.TICKETS.STATUS.RESOLVED',
-    class: 'bg-n-teal-3 text-n-teal-11',
+    class: 'bg-n-teal-9',
   },
 };
 const PRIORITY_LABEL_KEYS = {
@@ -77,6 +75,9 @@ const PRIORITY_LABEL_KEYS = {
 const group = useTicketGroup(() => props.chat.id);
 const subject = computed(() => getTicketSubject(props.chat));
 const hasUnread = computed(() => props.chat.unread_count > 0);
+const unreadLabel = computed(() =>
+  props.chat.unread_count > 99 ? '99+' : String(props.chat.unread_count)
+);
 const accountLabels = useMapGetter('labels/getLabels');
 // Compact label cell: first label as a chip, then "+N"; all on hover.
 const labelChips = computed(() =>
@@ -172,9 +173,13 @@ const selectedModel = computed({
     <div class="min-w-0">
       <span
         data-test-id="ticket-status"
-        class="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-460 tracking-normal truncate max-w-full"
-        :class="statusClass"
+        class="inline-flex items-center gap-1.5 text-xs font-460 tracking-normal text-n-slate-11 truncate max-w-full"
       >
+        <span
+          data-test-id="ticket-status-dot"
+          class="size-2 rounded-full flex-shrink-0"
+          :class="statusClass"
+        />
         {{ statusLabel }}
       </span>
     </div>
@@ -221,20 +226,16 @@ const selectedModel = computed({
           }}
         </span>
       </span>
-      <UnreadBadge
+      <span
         v-if="hasUnread"
-        :count="chat.unread_count"
-        class="flex-shrink-0 ms-auto"
-      />
+        data-test-id="ticket-unread"
+        class="flex-shrink-0 ms-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-n-blue-3 text-n-blue-11 text-[11px] font-520 tracking-normal tabular-nums"
+      >
+        {{ unreadLabel }}
+      </span>
     </div>
 
-    <div class="flex items-center gap-2 min-w-0">
-      <Avatar
-        :name="currentContact.name"
-        :src="currentContact.thumbnail"
-        :size="20"
-        hide-offline-status
-      />
+    <div class="flex items-center min-w-0">
       <span class="truncate text-n-slate-12 font-440 capitalize">
         {{ currentContact.name }}
       </span>
