@@ -119,7 +119,8 @@ const INBOX_IDENTIFIER_RESOLVERS = {
   [INBOX_TYPES.WHATSAPP]: inbox => inbox.phone_number,
   [INBOX_TYPES.SMS]: inbox => inbox.phone_number,
   [INBOX_TYPES.LINE]: inbox => inbox.line_channel_id,
-  [INBOX_TYPES.API]: inbox => inbox.inbox_identifier,
+  // FlightsMojo: no API entry: its inbox_identifier is a random token that
+  // means nothing to agents (upstream shows it since #15528).
   [INBOX_TYPES.TWILIO]: inbox =>
     inbox.phone_number?.replace(/^whatsapp:/, '') ||
     inbox.messaging_service_sid ||

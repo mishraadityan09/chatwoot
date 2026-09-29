@@ -27,7 +27,6 @@ describe('#Inbox Helpers', () => {
       [INBOX_TYPES.SMS, { phone_number: '+15555550101' }, '+15555550101'],
       [INBOX_TYPES.TELEGRAM, { bot_name: 'support_bot' }, '@support_bot'],
       [INBOX_TYPES.LINE, { line_channel_id: 'line-123' }, 'line-123'],
-      [INBOX_TYPES.API, { inbox_identifier: 'api-123' }, 'api-123'],
     ])('returns the identifier for %s', (channelType, attributes, expected) => {
       expect(
         getInboxIdentifier({ channel_type: channelType, ...attributes })
@@ -87,6 +86,16 @@ describe('#Inbox Helpers', () => {
         getInboxIdentifier({
           channel_type: INBOX_TYPES.TWITTER,
           profile_id: 'profile-123',
+        })
+      ).toBe('');
+    });
+
+    // FlightsMojo: API inboxes hide their random inbox_identifier.
+    it('returns an empty identifier for API inboxes', () => {
+      expect(
+        getInboxIdentifier({
+          channel_type: INBOX_TYPES.API,
+          inbox_identifier: 'api-123',
         })
       ).toBe('');
     });
