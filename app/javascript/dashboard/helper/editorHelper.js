@@ -10,6 +10,11 @@ import * as Sentry from '@sentry/vue';
 import camelcaseKeys from 'camelcase-keys';
 import { FORMATTING, MARKDOWN_PATTERNS } from 'dashboard/constants/editor';
 import { INBOX_TYPES, TWILIO_CHANNEL_MEDIUM } from 'dashboard/helper/inbox';
+// FlightsMojo: keep editor Markdown parseable (see the helper's header).
+import {
+  ensureParseable,
+  unindentPastedText,
+} from 'dashboard/flightsmojo/helpers/messageMarkdown';
 
 /**
  * Extract text from markdown, and remove all images, code blocks, links, headers, bold, italic, lists etc.
@@ -440,7 +445,8 @@ export function stripUnsupportedFormatting(content, schema) {
     }
   });
 
-  return sanitizedContent;
+  // FlightsMojo: whatever the patterns above miss must still parse.
+  return ensureParseable(sanitizedContent, schema);
 }
 
 /**
@@ -533,7 +539,7 @@ const createNode = (editorView, nodeType, content) => {
       // Strip unsupported formatting before parsing to ensure content can be inserted
       // into channels that don't support certain markdown features (e.g., API channels)
       const sanitizedContent = stripUnsupportedFormatting(
-        content,
+        unindentPastedText(content), // FlightsMojo: Word's Tab-indented lines
         state.schema
       );
       return new MessageMarkdownTransformer(state.schema).parse(
