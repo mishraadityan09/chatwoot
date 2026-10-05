@@ -79,6 +79,15 @@ const hasAdvancedAssignment = computed(() => {
   );
 });
 
+// FlightsMojo: Reports → SLA is a paid feature; without it the page loads
+// forever. Campaigns → SMS only makes sense when an SMS inbox exists.
+const hasSla = computed(() =>
+  isFeatureEnabledonAccount.value(accountId.value, FEATURE_FLAGS.SLA)
+);
+const hasSmsInbox = computed(
+  () => (store.getters['inboxes/getSMSInboxes'] || []).length > 0
+);
+
 const hasConversationUnreadCounts = computed(() => {
   return isFeatureEnabledonAccount.value(
     accountId.value,
@@ -708,11 +717,15 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.CSAT'),
           to: accountScopedRoute('csat_reports'),
         },
-        {
-          name: 'Reports SLA',
-          label: t('SIDEBAR.REPORTS_SLA'),
-          to: accountScopedRoute('sla_reports'),
-        },
+        ...(hasSla.value
+          ? [
+              {
+                name: 'Reports SLA',
+                label: t('SIDEBAR.REPORTS_SLA'),
+                to: accountScopedRoute('sla_reports'),
+              },
+            ]
+          : []),
         {
           name: 'Reports Bot',
           label: t('SIDEBAR.REPORTS_BOT'),
@@ -730,11 +743,15 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.LIVE_CHAT'),
           to: accountScopedRoute('campaigns_livechat_index'),
         },
-        {
-          name: 'SMS',
-          label: t('SIDEBAR.SMS'),
-          to: accountScopedRoute('campaigns_sms_index'),
-        },
+        ...(hasSmsInbox.value
+          ? [
+              {
+                name: 'SMS',
+                label: t('SIDEBAR.SMS'),
+                to: accountScopedRoute('campaigns_sms_index'),
+              },
+            ]
+          : []),
         {
           name: 'WhatsApp',
           label: t('SIDEBAR.WHATSAPP'),

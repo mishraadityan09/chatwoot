@@ -1,4 +1,4 @@
-import { getTicketSubject } from '../ticket';
+import { getBookingId, getTicketSubject } from '../ticket';
 
 describe('getTicketSubject', () => {
   it('reads the email subject', () => {
@@ -47,5 +47,40 @@ describe('getTicketSubject', () => {
     expect(
       getTicketSubject({ additional_attributes: { subject: { x: 1 } } })
     ).toBe('');
+  });
+});
+
+describe('getBookingId', () => {
+  it('reads a numeric booking id', () => {
+    expect(
+      getBookingId({ custom_attributes: { booking_id: '48211902' } })
+    ).toBe('48211902');
+  });
+
+  it('accepts a number and trims spaces', () => {
+    expect(getBookingId({ custom_attributes: { booking_id: 123 } })).toBe(
+      '123'
+    );
+    expect(getBookingId({ custom_attributes: { booking_id: ' 456 ' } })).toBe(
+      '456'
+    );
+  });
+
+  it('ignores values that are not a plain numeric id', () => {
+    expect(getBookingId({ custom_attributes: { booking_id: 'AB12CD' } })).toBe(
+      ''
+    );
+    expect(
+      getBookingId({ custom_attributes: { booking_id: '12345678901' } })
+    ).toBe('');
+    expect(
+      getBookingId({ custom_attributes: { booking_id: '<b>1</b>' } })
+    ).toBe('');
+  });
+
+  it('returns an empty string when there is no booking id', () => {
+    expect(getBookingId({})).toBe('');
+    expect(getBookingId(null)).toBe('');
+    expect(getBookingId({ custom_attributes: { booking_id: null } })).toBe('');
   });
 });

@@ -12,7 +12,10 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
-import { getTicketSubject } from 'dashboard/flightsmojo/helpers/ticket';
+import {
+  getBookingId,
+  getTicketSubject,
+} from 'dashboard/flightsmojo/helpers/ticket';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -25,6 +28,8 @@ const props = defineProps({
   showInboxName: { type: Boolean, default: false },
   hideThumbnail: { type: Boolean, default: false },
   compact: { type: Boolean, default: false },
+  // FlightsMojo: show the BK-<id> chip (previous conversations of a contact).
+  showBookingId: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -41,6 +46,9 @@ const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
 // FlightsMojo: ticket subject row (email / website tickets), Zendesk-style.
 const ticketSubject = computed(() => getTicketSubject(props.chat));
+const bookingId = computed(() =>
+  props.showBookingId ? getBookingId(props.chat) : ''
+);
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -190,6 +198,18 @@ watch(
       >
         {{ currentContact.name }}
       </h4>
+      <!-- FlightsMojo: booking id, so a customer's several bookings can be told apart -->
+      <p
+        v-if="bookingId"
+        class="my-0 mx-2 leading-5"
+        data-test-id="conversation-booking-id"
+      >
+        <span
+          class="px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12"
+        >
+          {{ $t('FLIGHTSMOJO.BOOKING_ID.CHIP', { id: bookingId }) }}
+        </span>
+      </p>
       <!-- FlightsMojo: ticket subject; the preview below then shows the body -->
       <p
         v-if="ticketSubject"

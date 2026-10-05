@@ -22,9 +22,10 @@ const defaultChat = {
   created_at: 1700000000,
 };
 
-const mountCard = chat =>
+const mountCard = (chat, extraProps = {}) =>
   shallowMount(ConversationCard, {
     props: {
+      ...extraProps,
       chat: { ...defaultChat, ...chat },
       currentContact: { name: 'Jane Doe', thumbnail: '' },
       inbox: { id: 1 },
@@ -92,5 +93,43 @@ describe('ConversationCard ticket subject', () => {
 
     expect(preview.classes()).toContain('font-medium');
     expect(preview.classes()).toContain('text-n-slate-12');
+  });
+});
+
+describe('ConversationCard booking id chip', () => {
+  const chip = wrapper =>
+    wrapper.find('[data-test-id="conversation-booking-id"]');
+
+  it('shows the booking id when asked to (previous conversations)', () => {
+    const wrapper = mountCard(
+      { custom_attributes: { booking_id: '48211902' } },
+      { showBookingId: true }
+    );
+
+    expect(chip(wrapper).exists()).toBe(true);
+  });
+
+  it('shows nothing by default, so other lists are unchanged', () => {
+    const wrapper = mountCard({
+      custom_attributes: { booking_id: '48211902' },
+    });
+
+    expect(chip(wrapper).exists()).toBe(false);
+  });
+
+  it('shows nothing without a booking id or with a non-numeric one', () => {
+    expect(
+      chip(
+        mountCard({ custom_attributes: {} }, { showBookingId: true })
+      ).exists()
+    ).toBe(false);
+    expect(
+      chip(
+        mountCard(
+          { custom_attributes: { booking_id: 'AB12CD' } },
+          { showBookingId: true }
+        )
+      ).exists()
+    ).toBe(false);
   });
 });
