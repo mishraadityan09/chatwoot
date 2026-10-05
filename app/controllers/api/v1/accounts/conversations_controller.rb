@@ -1,4 +1,5 @@
 class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController
+  include RequiredAttributesGuard # FlightsMojo: required conversation attributes before resolving
   include Events::Types
   include DateRangeHelper
   include HmacConcern

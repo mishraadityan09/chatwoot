@@ -1,0 +1,5 @@
+# FlightsMojo: our own strings, so Chatwoot's locale files stay untouched.
+en:
+  conversations:
+    required_attributes:
+      missing: 'Fill in %{attributes} before resolving this conversation.'
