@@ -25,7 +25,11 @@ import ConversationApi from 'dashboard/api/inbox/conversation';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 
-export const FETCH_THROTTLE_MS = 30 * 1000;
+// 60 s (was 30 s; raised 8 Oct 2026): every open tab recounts every folder
+// each round, and each count scans the whole open backlog, so the load is
+// agents × folders × backlog. At ~3000 tickets/day something always changes,
+// so rounds run at this rate all day; a badge at most a minute stale is fine.
+export const FETCH_THROTTLE_MS = 60 * 1000;
 export const MAX_IN_FLIGHT = 3;
 export const COUNT_ONLY_PAGE = 100000;
 const STATS_EVENT = 'fetch_conversation_stats';
