@@ -6,7 +6,6 @@ import { createSharedComposable, useNow } from '@vueuse/core';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import wootConstants from 'dashboard/constants/globals';
-import { setPlayLiveList } from '../play/usePlayQueue';
 
 export const TICKET_GROUPS_KEY = Symbol('fmTicketGroups');
 // Height of the sticky table header, measured by FmTicketTableHeader. The
@@ -118,19 +117,16 @@ export const resetDefaultTicketLayoutCheck = () => {
 /**
  * Called once by ConversationList.
  * @param list - the rendered conversations (getter or ref)
- * @param {{ loadMore?: Function }} options - asks the list for its next page
- *   (Play continues past the loaded tickets)
  * @returns {{ headerHeight: import('vue').Ref<number> }} for the
  *   Virtualizer's start-margin
  */
-export const useTicketTable = (list, options = {}) => {
+export const useTicketTable = list => {
   provide(
     TICKET_GROUPS_KEY,
     computed(() => getTicketGroups(toValue(list)))
   );
   const headerHeight = ref(0);
   provide(TICKET_HEADER_HEIGHT_KEY, headerHeight);
-  setPlayLiveList(list, options);
   useDefaultTicketLayout();
   return { headerHeight };
 };

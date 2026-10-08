@@ -2,15 +2,12 @@
 // FlightsMojo: sticky header of the ticket table: a summary line
 // ("12 of 138 tickets · Updated just now") and the column titles, on the same
 // grid as FmTicketRow. Rendered by ConversationList in the expanded layout.
-import { computed, inject, onBeforeUnmount, useTemplateRef, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, inject, onBeforeUnmount, useTemplateRef } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useMapGetter } from 'dashboard/composables/store';
 import { dynamicTime, shortTimestamp } from 'shared/helpers/timeHelper';
-import Button from 'dashboard/components-next/button/Button.vue';
 import FmTicketGrid from './FmTicketGrid.vue';
-import { usePlayQueue } from '../play/usePlayQueue';
 import { TICKET_HEADER_HEIGHT_KEY, useTicketClock } from './ticketTable';
 
 const props = defineProps({
@@ -20,17 +17,6 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
-const route = useRoute();
-const { isPlaying, play, leave } = usePlayQueue();
-
-// Back on the list (no ticket open) ends Play mode, giving back a ticket
-// Play claimed if the agent left it untouched.
-watch(
-  () => route.params.conversation_id ?? route.params.conversationId,
-  id => {
-    if (!id && isPlaying.value) leave();
-  }
-);
 
 // Report our height to ConversationList for the Virtualizer's start-margin.
 const headerHeight = inject(TICKET_HEADER_HEIGHT_KEY, null);
@@ -82,18 +68,9 @@ const updated = computed(() => {
       <span data-test-id="ticket-summary" class="truncate tabular-nums">{{
         summary
       }}</span>
-      <div class="flex items-center gap-3 flex-shrink-0">
-        <span data-test-id="ticket-updated">{{ updated }}</span>
-        <Button
-          v-tooltip.bottom="t('FLIGHTSMOJO.PLAY.START_TOOLTIP')"
-          data-test-id="ticket-play"
-          size="xs"
-          icon="i-lucide-play"
-          :label="t('FLIGHTSMOJO.PLAY.START')"
-          :disabled="!loadedCount"
-          @click="play"
-        />
-      </div>
+      <span data-test-id="ticket-updated" class="flex-shrink-0">{{
+        updated
+      }}</span>
     </div>
     <FmTicketGrid
       class="h-8 text-xs font-520 tracking-[0.01em] text-n-slate-10 border-y border-n-weak"
