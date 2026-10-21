@@ -96,6 +96,8 @@ onMounted(() => {
         v-model:range-type="selectedDateRange"
         @date-range-changed="onDateRangeChange"
       />
+      <!-- FlightsMojo: extra filters from the page (channel on the agents report) -->
+      <slot name="filters" />
     </div>
     <div class="flex items-center">
       <span class="mx-2 text-sm whitespace-nowrap">

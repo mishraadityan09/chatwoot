@@ -2,7 +2,7 @@ module Api::V2::Accounts::ReportsHelper
   def generate_agents_report
     reports = V2::Reports::AgentSummaryBuilder.new(
       account: Current.account,
-      params: build_params(type: :agent)
+      params: build_params(type: :agent).merge(fm_channel_filter) # FlightsMojo: channel filter
     ).build
 
     Current.account.users.map do |agent|
@@ -63,6 +63,13 @@ module Api::V2::Accounts::ReportsHelper
         business_hours: ActiveModel::Type::Boolean.new.cast(params[:business_hours])
       }
     )
+  end
+
+  # FlightsMojo: the agents CSV honours the page's channel filter (404 for another account's inbox).
+  def fm_channel_filter
+    return {} if params[:inbox_id].blank?
+
+    { inbox_id: Current.account.inboxes.find(params[:inbox_id]).id }
   end
 
   def report_builder(report_params)

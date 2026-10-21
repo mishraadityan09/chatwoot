@@ -120,6 +120,42 @@ RSpec.describe V2::Reports::AgentSummaryBuilder do
       end
     end
 
+    # FlightsMojo: channel filter (Reports → Agents)
+    context 'when a channel filter is given' do
+      let(:business_hours) { false }
+      let(:inbox_a) { create(:inbox, account: account) }
+      let(:inbox_b) { create(:inbox, account: account) }
+      let(:params) { super().merge(inbox_id: inbox_a.id) }
+
+      before do
+        in_a = create(:conversation, account: account, inbox: inbox_a, assignee: user1, created_at: Time.current)
+        in_b = create(:conversation, account: account, inbox: inbox_b, assignee: user1, created_at: Time.current)
+        create(
+          :reporting_event,
+          account: account, inbox: inbox_a, conversation: in_a, user: user1,
+          name: 'conversation_resolved', value: 50, value_in_business_hours: 40, created_at: Time.current
+        )
+        create(
+          :reporting_event,
+          account: account, inbox: inbox_b, conversation: in_b, user: user1,
+          name: 'conversation_resolved', value: 500, value_in_business_hours: 400, created_at: Time.current
+        )
+      end
+
+      it 'counts only that channel' do
+        report = builder.build.find { |row| row[:id] == user1.id }
+
+        expect(report).to eq(
+          id: user1.id,
+          conversations_count: 1,
+          resolved_conversations_count: 1,
+          avg_resolution_time: 50.0,
+          avg_first_response_time: nil,
+          avg_reply_time: nil
+        )
+      end
+    end
+
     context 'when there is no team data' do
       let!(:new_user) { create(:user, account: account, role: :agent) }
       let(:business_hours) { false }

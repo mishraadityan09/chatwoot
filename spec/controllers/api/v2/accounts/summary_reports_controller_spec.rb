@@ -59,6 +59,36 @@ RSpec.describe 'Summary Reports API', type: :request do
         expect(json_response.first['conversations_count']).to eq(110)
         expect(json_response.first['avg_reply_time']).to be_nil
       end
+
+      # FlightsMojo: channel filter (Reports → Agents)
+      it 'passes the channel filter to the builder when the inbox belongs to the account' do
+        inbox = create(:inbox, account: account)
+        agent_summary_builder = double
+        allow(V2::Reports::AgentSummaryBuilder).to receive(:new).and_return(agent_summary_builder)
+        allow(agent_summary_builder).to receive(:build).and_return([])
+
+        get "/api/v2/accounts/#{account.id}/summary_reports/agent",
+            params: params.merge(inbox_id: inbox.id),
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(V2::Reports::AgentSummaryBuilder).to have_received(:new).with(
+          account: account,
+          params: params.merge(type: :agent, inbox_id: inbox.id)
+        )
+        expect(response).to have_http_status(:success)
+      end
+
+      it 'returns not found for a channel of another account' do
+        other_inbox = create(:inbox)
+
+        get "/api/v2/accounts/#{account.id}/summary_reports/agent",
+            params: params.merge(inbox_id: other_inbox.id),
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
   end
 

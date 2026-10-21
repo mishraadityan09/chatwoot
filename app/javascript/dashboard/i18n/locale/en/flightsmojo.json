@@ -46,6 +46,13 @@
       "TICKET": "Ticket",
       "ID": "#{id}",
       "CLOSE": "Close tab"
+    },
+    "REPORTS": {
+      "CHANNEL": {
+        "ALL": "All channels",
+        "SEARCH": "Search channels",
+        "EMPTY": "No channels found"
+      }
     }
   }
 }

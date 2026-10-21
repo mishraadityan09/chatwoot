@@ -16,12 +16,14 @@ class SummaryReportsAPI extends ApiClient {
     });
   }
 
-  getAgentReports({ since, until, businessHours } = {}) {
+  // FlightsMojo: inboxId narrows the agents report to one channel.
+  getAgentReports({ since, until, businessHours, inboxId } = {}) {
     return axios.get(`${this.url}/agent`, {
       params: {
         since,
         until,
         business_hours: businessHours,
+        inbox_id: inboxId,
       },
     });
   }
