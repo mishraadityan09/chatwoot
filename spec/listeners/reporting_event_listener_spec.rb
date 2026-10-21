@@ -18,6 +18,21 @@ describe ReportingEventListener do
       expect(account.reporting_events.where(name: 'conversation_resolved').count).to be 1
     end
 
+    # FlightsMojo: auto-resolved conversations are not credited to the assignee
+    it 'credits the assignee when somebody resolved the conversation' do
+      event = Events::Base.new('conversation.resolved', Time.zone.now, conversation: conversation, fm_system_action: false)
+      listener.conversation_resolved(event)
+      expect(account.reporting_events.find_by(name: 'conversation_resolved').user_id).to eq(user.id)
+    end
+
+    it 'credits nobody when the resolution was a system action' do
+      event = Events::Base.new('conversation.resolved', Time.zone.now, conversation: conversation, fm_system_action: true)
+      listener.conversation_resolved(event)
+      reporting_event = account.reporting_events.find_by(name: 'conversation_resolved')
+      expect(reporting_event.user_id).to be_nil
+      expect(reporting_event.inbox_id).to eq(inbox.id)
+    end
+
     context 'when rollup creation fails' do
       let(:event) { Events::Base.new('conversation.resolved', Time.zone.now, conversation: conversation) }
       let(:error) { StandardError.new('rollup failed') }
