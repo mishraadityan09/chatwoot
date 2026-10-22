@@ -461,6 +461,7 @@ const menuItems = computed(() => {
           children: sortedTeams.value.map(team => ({
             name: `${team.name}-${team.id}`,
             label: team.name,
+            labelClass: 'capitalize', // FlightsMojo: team names are stored lower-case
             badgeCount: getTeamUnreadCount.value(team.id),
             icon: team.icon
               ? h(EmojiIcon, {
@@ -990,7 +991,7 @@ const menuItems = computed(() => {
         ],
       },
     ]"
-    class="bg-n-background flex flex-col text-sm pb-px fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 w-[200px] md:w-auto md:relative md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:translate-x-0 ltr:border-r rtl:border-l border-n-weak"
+    class="bg-n-background flex flex-col text-[13px] leading-5 pb-px fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 w-[200px] md:w-auto md:relative md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:translate-x-0 ltr:border-r rtl:border-l border-n-weak"
     :class="[
       {
         'shadow-lg md:shadow-none': isMobileSidebarOpen,
@@ -1001,6 +1002,7 @@ const menuItems = computed(() => {
     ]"
     :style="isMobile ? undefined : { width: `${sidebarWidth}px` }"
   >
+    <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm) -->
     <section
       class="grid"
       :class="isEffectivelyCollapsed ? 'mt-3 mb-6 gap-4' : 'mt-1 mb-4 gap-2'"
@@ -1036,7 +1038,7 @@ const menuItems = computed(() => {
         <RouterLink
           v-if="!isEffectivelyCollapsed"
           :to="{ name: 'search' }"
-          class="flex gap-2 items-center px-2 py-1 w-full h-7 rounded-lg outline outline-1 outline-n-weak bg-n-button-color transition-all duration-100 ease-out"
+          class="flex gap-2 items-center px-2 py-1 w-full h-7 rounded-lg text-[13px] outline outline-1 outline-n-weak bg-n-button-color transition-all duration-100 ease-out"
         >
           <span class="flex-shrink-0 i-lucide-search size-4 text-n-slate-10" />
           <span class="flex-grow text-start text-n-slate-10">
@@ -1131,5 +1133,35 @@ const menuItems = computed(() => {
         :class="{ 'bg-n-brand': isResizing }"
       />
     </div>
+    <!-- FlightsMojo (FM-32): a visible collapse / expand toggle on the border,
+         like Zendesk's views panel. Centred on the corner where the tab bar's
+         bottom line (40 px) meets the sidebar border, so it crowds neither the
+         "Views" tab nor the compose button. Shares the resize handle's
+         double-click behaviour (and its persisted width), desktop only. -->
+    <button
+      v-tooltip.right="
+        isEffectivelyCollapsed
+          ? t('SIDEBAR.EXPAND_SIDEBAR')
+          : t('SIDEBAR.COLLAPSE_SIDEBAR')
+      "
+      type="button"
+      class="hidden md:flex absolute z-50 size-[22px] p-0 items-center justify-center rounded-full bg-n-background outline outline-1 outline-n-weak text-n-slate-11 shadow-md transition-colors top-[29px] ltr:-right-[11px] rtl:-left-[11px] hover:text-n-slate-12 hover:bg-n-alpha-2 focus-visible:outline-n-brand"
+      :aria-label="
+        isEffectivelyCollapsed
+          ? t('SIDEBAR.EXPAND_SIDEBAR')
+          : t('SIDEBAR.COLLAPSE_SIDEBAR')
+      "
+      :aria-expanded="!isEffectivelyCollapsed"
+      @click="onResizeHandleDoubleClick"
+    >
+      <span
+        class="size-3.5 flex-shrink-0 rtl:rotate-180"
+        :class="
+          isEffectivelyCollapsed
+            ? 'i-lucide-chevron-right'
+            : 'i-lucide-chevron-left'
+        "
+      />
+    </button>
   </aside>
 </template>

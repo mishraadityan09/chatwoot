@@ -247,8 +247,9 @@ watch(
     :permissions="resolvePermissions(to)"
     :feature-flag="resolveFeatureFlag(to)"
     as="li"
-    class="grid gap-1 text-sm cursor-pointer select-none min-w-0"
+    class="grid gap-1 text-[13px] cursor-pointer select-none min-w-0"
   >
+    <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm) -->
     <!-- Collapsed State -->
     <template v-if="isCollapsed">
       <div

@@ -268,6 +268,7 @@ export default {
         :title="$t('CONVERSATION_SIDEBAR.TEAM_LABEL')"
       />
       <MultiselectDropdown
+        class="capitalize"
         :options="teamsList"
         :selected-item="assignedTeam"
         show-emoji-icon
