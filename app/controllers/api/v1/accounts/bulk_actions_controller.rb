@@ -1,5 +1,7 @@
 class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseController
   before_action :validate_assignment_targets, only: :create, if: -> { normalized_type == 'Conversation' }
+  # FlightsMojo (FM-24): the bulk Resolve honours the required conversation attributes too.
+  before_action :ensure_required_attributes_filled_for_bulk_resolve, only: :create, if: -> { normalized_type == 'Conversation' }
 
   def create
     case normalized_type
@@ -16,6 +18,30 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   end
 
   private
+
+  # FlightsMojo (FM-24): a person resolving several tickets at once must have filled the
+  # attributes the administrator made mandatory (for example the Booking ID) on each of
+  # them, exactly like the single-ticket endpoint (RequiredAttributesGuard). Bots and the
+  # other bulk fields are not affected.
+  def ensure_required_attributes_filled_for_bulk_resolve
+    return unless Current.user.is_a?(User) && conversation_params.dig(:fields, :status) == 'resolved'
+
+    service = Conversations::RequiredAttributesService.new(Current.account)
+    return if service.required_keys.empty?
+
+    blocked = Current.account.conversations.where(display_id: params[:ids]).filter_map do |conversation|
+      missing = service.missing_keys(conversation)
+      [conversation.display_id, missing] if missing.any?
+    end
+    return if blocked.empty?
+
+    keys = blocked.flat_map(&:last).uniq
+    render json: { error: I18n.t('conversations.required_attributes.missing_bulk',
+                                 attributes: service.display_names(keys).join(', '),
+                                 ids: blocked.map { |id, _missing| "##{id}" }.join(', ')),
+                   missing_attributes: keys,
+                   conversation_ids: blocked.map(&:first) }, status: :unprocessable_entity
+  end
 
   def normalized_type
     params[:type].to_s.camelize

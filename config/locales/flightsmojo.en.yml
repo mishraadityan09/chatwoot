@@ -3,3 +3,4 @@ en:
   conversations:
     required_attributes:
       missing: 'Fill in %{attributes} before resolving this conversation.'
+      missing_bulk: 'Fill in %{attributes} before resolving. Still missing on %{ids}.'
