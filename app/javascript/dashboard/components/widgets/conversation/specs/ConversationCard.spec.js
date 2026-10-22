@@ -71,3 +71,40 @@ describe('ConversationCard', () => {
     );
   });
 });
+
+// FlightsMojo (FM-35): the status dot before the name, shared with the tabs.
+describe('ConversationCard status dot', () => {
+  const mountWithStatus = status =>
+    shallowMount(ConversationCard, {
+      props: {
+        chat: {
+          id: 7,
+          status,
+          unread_count: 0,
+          messages: [],
+          meta: {},
+          additional_attributes: {},
+          custom_attributes: {},
+          labels: [],
+        },
+        currentContact: { name: 'Fatima Khan', availability_status: 'offline' },
+      },
+      global: { directives: { tooltip: {} } },
+    });
+
+  it('colours the dot by status and names it for screen readers', () => {
+    const open = mountWithStatus('open').find(
+      '[data-test-id="conversation-status-dot"]'
+    );
+    expect(open.classes()).toContain('bg-n-ruby-9');
+    expect(open.attributes('aria-label')).toBe(
+      'FLIGHTSMOJO.TICKETS.STATUS.OPEN'
+    );
+
+    expect(
+      mountWithStatus('resolved')
+        .find('[data-test-id="conversation-status-dot"]')
+        .classes()
+    ).toContain('bg-n-teal-9');
+  });
+});

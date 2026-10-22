@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -12,6 +13,11 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+// FlightsMojo (FM-35): the status dot shared with the ticket tabs and table
+import {
+  statusDotClass,
+  statusLabelKey,
+} from 'dashboard/flightsmojo/helpers/status';
 import {
   getBookingId,
   getTicketSubject,
@@ -41,6 +47,14 @@ const emit = defineEmits([
 
 const hovered = ref(false);
 
+const { t: translate } = useI18n();
+// FlightsMojo (FM-35): ticket status on the card, the same dot as the tabs
+// above the list and the table's Status column; the word sits in the tooltip.
+const statusDot = computed(() => statusDotClass(props.chat.status));
+const statusLabel = computed(() => {
+  const key = statusLabelKey(props.chat.status);
+  return key ? translate(key) : props.chat.status || '';
+});
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
@@ -194,10 +208,19 @@ watch(
         </div>
       </div>
       <h4
-        class="conversation--user text-[13px] my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
+        class="conversation--user text-[13px] my-0 mx-2 capitalize pt-0.5 flex items-center gap-1.5 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
         :class="hasUnread ? 'font-semibold' : 'font-medium'"
       >
-        {{ currentContact.name }}
+        <!-- FlightsMojo (FM-35): status dot, as on the ticket tabs and the table -->
+        <span
+          v-tooltip.top="statusLabel"
+          data-test-id="conversation-status-dot"
+          :aria-label="statusLabel"
+          role="img"
+          class="size-2 rounded-full flex-shrink-0"
+          :class="statusDot"
+        />
+        <span class="truncate">{{ currentContact.name }}</span>
       </h4>
       <!-- FlightsMojo: booking id, so a customer's several bookings can be told apart -->
       <p

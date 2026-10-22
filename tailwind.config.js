@@ -33,6 +33,8 @@ const tailwindConfig = {
     './app/javascript/dashboard/components-next/**/*.vue',
     './app/javascript/dashboard/helper/**/*.js',
     './app/javascript/dashboard/composables/**/*.js',
+    // FlightsMojo: class names shared by several components live in these helpers
+    './app/javascript/dashboard/flightsmojo/**/*.js',
     './app/javascript/dashboard/components-next/**/*.js',
     './app/javascript/dashboard/routes/dashboard/**/**/*.js',
     './app/views/**/*.erb',

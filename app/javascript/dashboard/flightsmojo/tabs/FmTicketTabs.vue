@@ -5,17 +5,11 @@
 import { useI18n } from 'vue-i18n';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
 import { useTicketTabs } from './useTicketTabs';
+import { statusDotClass } from '../helpers/status';
 
 const { t } = useI18n();
 const { tabs, activeId, isOnList, open, close, openViews, info } =
   useTicketTabs();
-
-const STATUS_DOT = {
-  open: 'bg-n-ruby-9',
-  pending: 'bg-n-amber-9',
-  snoozed: 'bg-n-slate-9',
-  resolved: 'bg-n-teal-9',
-};
 
 const labelOf = tab => info(tab.id)?.name || t('FLIGHTSMOJO.TABS.TICKET');
 const titleOf = tab =>
@@ -26,7 +20,7 @@ const titleOf = tab =>
   ]
     .filter(Boolean)
     .join(' · ');
-const dotOf = tab => STATUS_DOT[info(tab.id)?.status] || 'bg-n-slate-7';
+const dotOf = tab => statusDotClass(info(tab.id)?.status);
 const isUnread = tab => !!info(tab.id)?.unread;
 
 // Middle click closes, like browser tabs.
