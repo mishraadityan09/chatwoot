@@ -174,9 +174,10 @@ const handleSeeOriginal = () => {
             :text="textToShow"
           />
         </template>
+        <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
         <button
           v-if="hasQuotedMessage"
-          class="text-n-slate-11 px-1 leading-none text-sm bg-n-alpha-black2 text-center flex items-center gap-1 mt-2"
+          class="text-n-slate-11 px-1 leading-none text-[13px] bg-n-alpha-black2 text-center flex items-center gap-1 mt-2"
           @click="showQuotedMessage = !showQuotedMessage"
         >
           <template v-if="showQuotedMessage">

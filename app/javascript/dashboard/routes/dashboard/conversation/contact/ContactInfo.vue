@@ -207,11 +207,12 @@ export default {
       <div class="flex flex-col items-start gap-1.5 min-w-0 w-full">
         <div v-if="showAvatar" class="flex items-center w-full min-w-0 gap-2">
           <div class="group/name flex items-center min-w-0 gap-2">
+            <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale: name 16 -> 14 px, same as the ticket header -->
             <InlineInput
               v-if="isEditingName"
               ref="nameInput"
               v-model="editName"
-              custom-input-class="!text-base !font-medium !w-auto max-w-full [field-sizing:content]"
+              custom-input-class="!text-sm !font-medium !w-auto max-w-full [field-sizing:content]"
               class="!w-fit min-w-0"
               @enter-press="saveNameEdit"
               @escape-press="cancelNameEdit"
@@ -219,7 +220,7 @@ export default {
             />
             <h3
               v-else
-              class="flex-shrink max-w-full min-w-0 my-0 text-base capitalize break-words text-n-slate-12 cursor-pointer hover:text-n-slate-12/80"
+              class="flex-shrink max-w-full min-w-0 my-0 text-sm capitalize break-words text-n-slate-12 cursor-pointer hover:text-n-slate-12/80"
               :title="$t('CONTACT_PANEL.CLICK_TO_EDIT')"
               @click="startEditingName"
             >

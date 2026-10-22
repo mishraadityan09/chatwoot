@@ -23,7 +23,8 @@ const handleButtonClick = button => {
     class="flex items-center justify-between px-4 py-2 border-b border-n-weak h-12"
   >
     <div class="flex items-center justify-between gap-2 flex-1">
-      <span class="font-medium text-sm text-n-slate-12">{{ title }}</span>
+      <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
+      <span class="font-medium text-[13px] text-n-slate-12">{{ title }}</span>
       <div class="flex items-center">
         <Button
           v-for="button in buttons"

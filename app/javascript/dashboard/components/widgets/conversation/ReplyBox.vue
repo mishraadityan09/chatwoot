@@ -1414,13 +1414,14 @@ export default {
           @content-ready="copilot.setContentReady"
           @send="copilot.sendFollowUp"
         />
+        <!-- FlightsMojo (FM-31): the editor inherited the page base (16 px); text-sm = 14 px, same as the message bubbles -->
         <WootMessageEditor
           v-else-if="!showAudioRecorderEditor"
           ref="messageEditor"
           v-model="message"
           :conversation-id="conversationId"
           :editor-id="editorStateId"
-          class="input popover-prosemirror-menu"
+          class="input popover-prosemirror-menu text-sm"
           :is-private="isOnPrivateNote"
           :placeholder="messagePlaceHolder"
           :update-selection-with="updateEditorSelectionWith"

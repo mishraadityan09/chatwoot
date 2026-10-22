@@ -122,6 +122,7 @@ watch(
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale (four text-sm -> text-[13px]) -->
   <div
     class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
     :class="{
@@ -193,7 +194,7 @@ watch(
         </div>
       </div>
       <h4
-        class="conversation--user text-sm my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
+        class="conversation--user text-[13px] my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
         :class="hasUnread ? 'font-semibold' : 'font-medium'"
       >
         {{ currentContact.name }}
@@ -214,7 +215,7 @@ watch(
       <p
         v-if="ticketSubject"
         data-test-id="conversation-subject"
-        class="text-sm my-0 mx-2 leading-5 truncate min-w-0 text-n-slate-12"
+        class="text-[13px] my-0 mx-2 leading-5 truncate min-w-0 text-n-slate-12"
         :class="hasUnread ? 'font-medium pe-6' : 'font-normal'"
         :title="ticketSubject"
       >
@@ -232,13 +233,13 @@ watch(
         key="message-preview"
         :message="lastMessageInChat"
         :prefer-body="!!ticketSubject"
-        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
+        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-[13px]"
         :class="messagePreviewClass"
       />
       <p
         v-else
         key="no-messages"
-        class="text-n-slate-11 text-sm my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        class="text-n-slate-11 text-[13px] my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
         :class="messagePreviewClass"
       >
         <fluent-icon

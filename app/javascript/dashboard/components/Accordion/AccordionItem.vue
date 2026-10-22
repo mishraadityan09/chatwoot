@@ -32,7 +32,8 @@ const onToggle = () => {
 </script>
 
 <template>
-  <div class="text-sm">
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
+  <div class="text-[13px]">
     <button
       class="flex items-center select-none w-full rounded-lg bg-n-slate-2 outline outline-1 outline-n-weak m-0 cursor-grab justify-between py-2 px-4 drag-handle"
       :class="{ 'rounded-bl-none rounded-br-none': isOpen }"
@@ -40,7 +41,7 @@ const onToggle = () => {
     >
       <div class="flex justify-between">
         <EmojiOrIcon class="inline-block w-5" :icon="icon" :emoji="emoji" />
-        <h5 class="text-n-slate-12 text-sm mb-0 py-0 pr-2 pl-0">
+        <h5 class="text-n-slate-12 text-[13px] mb-0 py-0 pr-2 pl-0">
           {{ title }}
         </h5>
       </div>

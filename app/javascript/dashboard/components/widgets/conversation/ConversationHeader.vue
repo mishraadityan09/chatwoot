@@ -135,10 +135,11 @@ const copyBookingId = async () => {
     <div
       class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
     >
+      <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale: Back 16 -> 13 px -->
       <BackButton
         v-if="showBackButton"
         :back-url="backButtonUrl"
-        class="me-2"
+        class="me-2 !text-[13px]"
       />
       <Avatar
         :name="currentContact.name"
