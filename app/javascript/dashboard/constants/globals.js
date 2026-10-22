@@ -28,6 +28,18 @@ export default {
     WAITING_SINCE_DESC: 'waiting_since_desc',
     PRIORITY_DESC_CREATED_AT_ASC: 'priority_desc_created_at_asc',
     UNREAD: 'unread',
+    // FlightsMojo (FM-34): the ticket table sorts by any of its columns
+    // (Conversations::SortService knows the same keys).
+    STATUS_ASC: 'status_asc',
+    STATUS_DESC: 'status_desc',
+    REQUESTER_ASC: 'requester_asc',
+    REQUESTER_DESC: 'requester_desc',
+    ASSIGNEE_ASC: 'assignee_asc',
+    ASSIGNEE_DESC: 'assignee_desc',
+    TEAM_ASC: 'team_asc',
+    TEAM_DESC: 'team_desc',
+    INBOX_ASC: 'inbox_asc',
+    INBOX_DESC: 'inbox_desc',
   },
   ARTICLE_STATUS_TYPES: {
     DRAFT: 0,

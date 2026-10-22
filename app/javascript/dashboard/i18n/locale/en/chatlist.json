@@ -81,6 +81,36 @@
       },
       "unread": {
         "TEXT": "Unread Count: Highest first"
+      },
+      "status_asc": {
+        "TEXT": "Status: Open first"
+      },
+      "status_desc": {
+        "TEXT": "Status: Resolved first"
+      },
+      "requester_asc": {
+        "TEXT": "Requester: A to Z"
+      },
+      "requester_desc": {
+        "TEXT": "Requester: Z to A"
+      },
+      "assignee_asc": {
+        "TEXT": "Assignee: A to Z"
+      },
+      "assignee_desc": {
+        "TEXT": "Assignee: Z to A"
+      },
+      "team_asc": {
+        "TEXT": "Group: A to Z"
+      },
+      "team_desc": {
+        "TEXT": "Group: Z to A"
+      },
+      "inbox_asc": {
+        "TEXT": "Channel: A to Z"
+      },
+      "inbox_desc": {
+        "TEXT": "Channel: Z to A"
       }
     },
     "ATTACHMENTS": {

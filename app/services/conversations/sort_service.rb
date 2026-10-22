@@ -11,6 +11,17 @@ class Conversations::SortService
     'waiting_since_desc' => %w[sort_on_waiting_since desc],
     'priority_desc_created_at_asc' => %w[sort_on_priority_created_at desc],
     'unread' => %w[sort_on_unread desc],
+    # FlightsMojo (FM-34): the ticket table's column sorts
+    'status_asc' => %w[sort_on_status asc],
+    'status_desc' => %w[sort_on_status desc],
+    'requester_asc' => %w[sort_on_requester asc],
+    'requester_desc' => %w[sort_on_requester desc],
+    'assignee_asc' => %w[sort_on_assignee asc],
+    'assignee_desc' => %w[sort_on_assignee desc],
+    'team_asc' => %w[sort_on_team asc],
+    'team_desc' => %w[sort_on_team desc],
+    'inbox_asc' => %w[sort_on_inbox asc],
+    'inbox_desc' => %w[sort_on_inbox desc],
 
     # To be removed in v3.5.0
     'latest' => %w[sort_on_last_activity_at desc],
