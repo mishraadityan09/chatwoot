@@ -132,7 +132,7 @@ export default {
           trailing-icon
           xs
           outline
-          class="w-fit min-w-20 max-w-32"
+          class="w-fit min-w-20 max-w-32 !text-[13px]"
           @click="openSortMenu"
         />
         <div
@@ -149,8 +149,9 @@ export default {
             }"
             @click.stop="onSortOptionClick(option)"
           >
+            <!-- FlightsMojo (FM-37): My Inbox on the workspace scale: options 12 -> 13 px -->
             <span
-              class="text-xs font-medium hover:text-n-brand truncate min-w-0 dark:hover:text-n-brand"
+              class="text-[13px] font-medium hover:text-n-brand truncate min-w-0 dark:hover:text-n-brand"
               :class="{
                 'text-n-blue-11 dark:text-n-blue-11': activeSort === option.key,
                 'text-n-slate-11': activeSort !== option.key,
@@ -186,7 +187,7 @@ export default {
           />
           <label
             :for="option.key"
-            class="text-xs font-medium text-n-slate-12 !ml-0 !mr-0 dark:text-n-slate-12"
+            class="text-[13px] font-medium text-n-slate-12 !ml-0 !mr-0 dark:text-n-slate-12"
           >
             {{ option.name }}
           </label>

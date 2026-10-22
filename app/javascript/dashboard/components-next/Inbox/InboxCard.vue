@@ -38,12 +38,16 @@ const isContextMenuOpen = ref(false);
 const contextMenuPosition = ref({ x: null, y: null });
 const slaCardLabel = ref(null);
 
+// FlightsMojo (FM-37): 13 px like the compact conversation card; unread
+// accents in iris (the unread dot's colour) because the theme maps blue-11 to
+// the brand red, which made every unread notification read as an alert.
 const getMessageClasses = {
-  emphasis: 'text-sm font-medium text-n-slate-11',
-  emphasisUnread: 'text-sm font-medium text-n-slate-12',
-  normal: 'text-sm font-normal text-n-slate-11',
-  normalUnread: 'text-sm text-n-slate-12',
+  emphasis: 'text-[13px] font-medium text-n-slate-11',
+  emphasisUnread: 'text-[13px] font-medium text-n-slate-12',
+  normal: 'text-[13px] font-normal text-n-slate-11',
+  normalUnread: 'text-[13px] text-n-slate-12',
 };
+const UNREAD_ACCENT = 'text-n-iris-11';
 
 const primaryActor = computed(() => props.inboxItem?.primaryActor);
 const meta = computed(() => primaryActor.value?.meta);
@@ -103,7 +107,7 @@ const formattedMessage = computed(() => {
 
 const notificationDetails = computed(() => {
   const type = props.inboxItem?.notificationType?.toUpperCase() || '';
-  const [icon = '', color = 'text-n-blue-11'] =
+  const [icon = '', color = UNREAD_ACCENT] =
     NOTIFICATION_TYPES_MAPPING[type] || [];
   return { text: type ? t(`INBOX.TYPES_NEXT.${type}`) : '', icon, color };
 });
@@ -184,11 +188,11 @@ onBeforeMount(contextMenuActions.close);
                 : 'i-lucide-alarm-clock-off'
             "
             class="flex-shrink-0 size-4"
-            :class="!isUnread ? 'text-n-slate-11' : 'text-n-blue-11'"
+            :class="!isUnread ? 'text-n-slate-11' : UNREAD_ACCENT"
           />
           <span
             class="text-xs font-medium truncate"
-            :class="!isUnread ? 'text-n-slate-11' : 'text-n-blue-11'"
+            :class="!isUnread ? 'text-n-slate-11' : UNREAD_ACCENT"
           >
             {{ snoozedText }}
           </span>
