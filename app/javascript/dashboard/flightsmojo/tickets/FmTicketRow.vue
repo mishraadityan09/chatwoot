@@ -173,7 +173,7 @@ const selectedModel = computed({
     <div class="min-w-0">
       <span
         data-test-id="ticket-status"
-        class="inline-flex items-center gap-1.5 text-xs font-460 tracking-normal text-n-slate-11 truncate max-w-full"
+        class="inline-flex items-center gap-1.5 text-[13px] font-460 tracking-normal text-n-slate-11 truncate max-w-full"
       >
         <span
           data-test-id="ticket-status-dot"
@@ -187,7 +187,7 @@ const selectedModel = computed({
     <div class="flex items-center gap-2 min-w-0">
       <span
         data-test-id="ticket-subject"
-        class="truncate min-w-0 text-sm tracking-[-0.2px]"
+        class="truncate min-w-0 text-[13px] tracking-[-0.13px]"
         :class="[
           subject ? 'text-n-slate-12' : 'text-n-slate-11',
           hasUnread ? 'font-520' : subject ? 'font-460' : 'font-420',
@@ -279,7 +279,12 @@ const selectedModel = computed({
     </div>
 
     <div class="hidden xl:flex min-w-0">
-      <InboxName v-if="showChannel" :inbox="inbox" class="min-w-0" />
+      <!-- FlightsMojo: the shared InboxName renders 14px; the table scale is 13px -->
+      <InboxName
+        v-if="showChannel"
+        :inbox="inbox"
+        class="min-w-0 [&_span]:text-[13px]"
+      />
     </div>
 
     <div class="truncate text-n-slate-11 text-end tabular-nums">
