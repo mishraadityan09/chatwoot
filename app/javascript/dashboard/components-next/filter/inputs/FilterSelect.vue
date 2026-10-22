@@ -99,11 +99,13 @@ const toggleDropdown = toggle => {
   <DropdownContainer>
     <template #trigger="{ toggle }">
       <slot name="trigger" :toggle="() => toggleDropdown(toggle)">
+        <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: chips 14 -> 13 px -->
         <Button
           ref="triggerRef"
           type="button"
           sm
           slate
+          class="!text-[13px]"
           :variant
           :icon="iconToRender"
           :trailing-icon="selectedOption.icon ? false : true"

@@ -106,7 +106,8 @@ const outsideClickHandler = [
     v-on-click-outside="outsideClickHandler"
     class="z-40 w-[min(34rem,calc(100vw-2rem))] lg:w-[750px] overflow-visible border border-n-weak bg-n-alpha-3 backdrop-blur-[100px] shadow-lg rounded-xl p-6 grid gap-6"
   >
-    <h3 class="text-base font-medium leading-6 text-n-slate-12">
+    <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: dialog title 16 -> 14 px -->
+    <h3 class="text-sm font-medium leading-5 text-n-slate-12">
       {{ filterModalHeaderTitle }}
     </h3>
     <div v-if="props.isSegmentView">

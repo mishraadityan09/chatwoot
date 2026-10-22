@@ -54,7 +54,7 @@ const handleBlur = () => {
     <div
       v-for="(value, index) in modelValue"
       :key="index"
-      class="flex items-center justify-center max-w-full h-6 gap-1 px-1 py-0.5 text-sm leading-4 border rounded-lg bg-n-solid-1 border-n-weak"
+      class="flex items-center justify-center max-w-full h-6 gap-1 px-1 py-0.5 text-[13px] leading-4 border rounded-lg bg-n-solid-1 border-n-weak"
     >
       <span class="flex-grow min-w-0 truncate text-n-slate-12">
         {{ value }}
