@@ -1,4 +1,4 @@
-import { getBookingId, getTicketSubject } from '../ticket';
+import { formatShortDuration, getBookingId, getTicketSubject } from '../ticket';
 
 describe('getTicketSubject', () => {
   it('reads the email subject', () => {
@@ -82,5 +82,24 @@ describe('getBookingId', () => {
     expect(getBookingId({})).toBe('');
     expect(getBookingId(null)).toBe('');
     expect(getBookingId({ custom_attributes: { booking_id: null } })).toBe('');
+  });
+});
+
+describe('formatShortDuration', () => {
+  it('reads like a table cell', () => {
+    expect(formatShortDuration(30)).toBe('<1m');
+    expect(formatShortDuration(45 * 60)).toBe('45m');
+    expect(formatShortDuration(3 * 3600 + 10 * 60)).toBe('3h 10m');
+    expect(formatShortDuration(2 * 3600)).toBe('2h');
+    expect(formatShortDuration(2 * 86400 + 4 * 3600 + 59 * 60)).toBe('2d 4h');
+    expect(formatShortDuration(3 * 86400)).toBe('3d');
+  });
+
+  it('gives nothing for missing or negative input', () => {
+    expect(formatShortDuration(undefined)).toBe('');
+    expect(formatShortDuration(null)).toBe('');
+    expect(formatShortDuration('')).toBe('');
+    expect(formatShortDuration(-5)).toBe('');
+    expect(formatShortDuration('abc')).toBe('');
   });
 });

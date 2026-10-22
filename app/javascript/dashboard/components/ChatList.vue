@@ -876,7 +876,7 @@ watch(appliedFilters, () => resetBulkActions());
 
 <template>
   <div
-    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-surface-1 relative"
+    class="flex flex-col flex-shrink-0 min-w-0 conversations-list-wrap bg-n-surface-1 relative"
     :class="[
       { hidden: !showConversationList },
       isOnExpandedLayout ? 'basis-full' : 'w-[340px] 2xl:w-[412px]',
@@ -955,6 +955,7 @@ watch(appliedFilters, () => resetBulkActions());
       :show-assignee="showAssigneeInConversationCard"
       :is-on-expanded-layout="isOnExpandedLayout"
       @load-more="loadMoreConversations"
+      @sort-change="onBasicFilterChange($event, 'sort')"
     />
     <Dialog
       ref="deleteConversationDialogRef"

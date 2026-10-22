@@ -5,6 +5,8 @@ import { formatNumber } from '@chatwoot/utils';
 import wootConstants from 'dashboard/constants/globals';
 
 import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
+// FlightsMojo (FM-33): the ticket table's column picker
+import FmTicketColumnsMenu from 'dashboard/flightsmojo/tickets/FmTicketColumnsMenu.vue';
 import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
@@ -170,6 +172,10 @@ const toggleConversationLayout = () => {
           :class="{ 'ltr:right-0 rtl:left-0': isOnExpandedLayout }"
         />
       </div>
+      <FmTicketColumnsMenu
+        v-if="isOnExpandedLayout && !isContactScoped"
+        :is-on-expanded-layout="isOnExpandedLayout"
+      />
       <ConversationBasicFilter
         v-if="!isContactScoped"
         :is-on-expanded-layout="isOnExpandedLayout"

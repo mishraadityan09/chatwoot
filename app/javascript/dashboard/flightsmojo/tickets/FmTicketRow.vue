@@ -21,8 +21,15 @@ import Icon from 'dashboard/components-next/icon/Icon.vue';
 import InboxName from 'dashboard/components-next/Conversation/InboxName.vue';
 import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
 import FmTicketGrid from './FmTicketGrid.vue';
-import { getTicketSubject } from '../helpers/ticket';
+import FmTicketLabelChips from './FmTicketLabelChips.vue';
+import {
+  formatShortDuration,
+  getBookingId,
+  getTicketSubject,
+} from '../helpers/ticket';
 import { priorityKey, useTicketClock, useTicketGroup } from './ticketTable';
+import { statusDotClass, statusLabelKey } from '../helpers/status';
+import { useTicketColumnsContext } from './ticketColumns';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -46,24 +53,11 @@ const emit = defineEmits([
 const { t } = useI18n();
 const { getPlainText } = useMessageFormatter();
 const now = useTicketClock();
+// The agent's columns (FM-33), provided once by ConversationList.
+const { columns, keys, gridStyle } = useTicketColumnsContext();
 
 // Status = a coloured dot + the word (a filled pill on every row was the
 // loudest thing on the page).
-const STATUS_BADGES = {
-  open: { key: 'FLIGHTSMOJO.TICKETS.STATUS.OPEN', class: 'bg-n-ruby-9' },
-  pending: {
-    key: 'FLIGHTSMOJO.TICKETS.STATUS.PENDING',
-    class: 'bg-n-amber-9',
-  },
-  snoozed: {
-    key: 'FLIGHTSMOJO.TICKETS.STATUS.SNOOZED',
-    class: 'bg-n-slate-9',
-  },
-  resolved: {
-    key: 'FLIGHTSMOJO.TICKETS.STATUS.RESOLVED',
-    class: 'bg-n-teal-9',
-  },
-};
 const PRIORITY_LABEL_KEYS = {
   URGENT: 'FLIGHTSMOJO.TICKETS.PRIORITY.URGENT',
   HIGH: 'FLIGHTSMOJO.TICKETS.PRIORITY.HIGH',
@@ -92,13 +86,12 @@ const previewText = computed(() => {
   return lastMessage?.content ? getPlainText(lastMessage.content) : '';
 });
 
-const statusBadge = computed(() => STATUS_BADGES[props.chat.status] || null);
-const statusClass = computed(
-  () => statusBadge.value?.class || STATUS_BADGES.snoozed.class
-);
-const statusLabel = computed(() =>
-  statusBadge.value ? t(statusBadge.value.key) : props.chat.status
-);
+// Colours and words come from helpers/status, shared with the tabs and the card.
+const statusClass = computed(() => statusDotClass(props.chat.status));
+const statusLabel = computed(() => {
+  const key = statusLabelKey(props.chat.status);
+  return key ? t(key) : props.chat.status;
+});
 
 const priorityLabel = computed(() =>
   props.chat.priority
@@ -133,6 +126,24 @@ const updatedAt = computed(() => {
   return shortTimestamp(dynamicTime(props.chat.timestamp));
 });
 
+// Labels sit in the Subject cell unless they have a column of their own.
+const showLabelsInSubject = computed(() => !keys.value.includes('labels'));
+const emptyValue = computed(() => t('FLIGHTSMOJO.TICKETS.EMPTY_VALUE'));
+const bookingId = computed(() => getBookingId(props.chat));
+const contactEmail = computed(() => props.currentContact?.email || '');
+// Time from the ticket's creation to the first agent reply.
+const firstResponse = computed(() => {
+  const { created_at: createdAt, first_reply_created_at: repliedAt } =
+    props.chat;
+  if (!createdAt || !repliedAt || repliedAt < createdAt) return '';
+  return formatShortDuration(repliedAt - createdAt);
+});
+// How long the customer has been waiting for a reply (relative, live).
+const waitingSince = computed(() => {
+  if (!now.value || !props.chat.waiting_since) return '';
+  return shortTimestamp(dynamicTime(props.chat.waiting_since));
+});
+
 const selectedModel = computed({
   get: () => props.selected,
   set: value => {
@@ -146,14 +157,22 @@ const selectedModel = computed({
 </script>
 
 <template>
+  <!-- The band spans the table's full width (same minimum as the rows) so its
+       border reaches the last column; the label inside sticks to the list's
+       left edge while a wide table scrolls sideways. -->
   <div
     v-if="group"
     data-test-id="ticket-group-header"
-    class="flex items-center gap-2 px-3 pt-4 pb-1.5 text-xs font-520 tracking-[0.01em] text-n-slate-11 border-b border-n-weak"
+    class="px-3 pt-4 pb-1.5 text-xs font-520 tracking-[0.01em] text-n-slate-11 border-b border-n-weak [min-width:var(--fm-ticket-min-width)]"
+    :style="gridStyle"
   >
-    <CardPriorityIcon :priority="chat.priority" show-empty />
-    <span class="text-n-slate-12">{{ groupLabel }}</span>
-    <span class="font-420 text-n-slate-10 tabular-nums">{{ group.count }}</span>
+    <div class="sticky left-0 inline-flex items-center gap-2">
+      <CardPriorityIcon :priority="chat.priority" show-empty />
+      <span class="text-n-slate-12">{{ groupLabel }}</span>
+      <span class="font-420 text-n-slate-10 tabular-nums">
+        {{ group.count }}
+      </span>
+    </div>
   </div>
   <FmTicketGrid
     data-test-id="ticket-row"
@@ -170,126 +189,172 @@ const selectedModel = computed({
       <Checkbox v-model="selectedModel" />
     </div>
 
-    <div class="min-w-0">
-      <span
-        data-test-id="ticket-status"
-        class="inline-flex items-center gap-1.5 text-[13px] font-460 tracking-normal text-n-slate-11 truncate max-w-full"
-      >
+    <template v-for="column in columns" :key="column.key">
+      <div v-if="column.key === 'status'" class="min-w-0">
         <span
-          data-test-id="ticket-status-dot"
-          class="size-2 rounded-full flex-shrink-0"
-          :class="statusClass"
-        />
-        {{ statusLabel }}
-      </span>
-    </div>
-
-    <div class="flex items-center gap-2 min-w-0">
-      <span
-        data-test-id="ticket-subject"
-        class="truncate min-w-0 text-[13px] tracking-[-0.13px]"
-        :class="[
-          subject ? 'text-n-slate-12' : 'text-n-slate-11',
-          hasUnread ? 'font-520' : subject ? 'font-460' : 'font-420',
-        ]"
-        :title="subject || previewText"
-      >
-        {{ subject || previewText }}
-      </span>
-      <span
-        v-if="labelChips.length"
-        data-test-id="ticket-labels"
-        class="flex items-center gap-1 min-w-0 max-w-[40%] flex-shrink-0"
-        :title="chat.labels.join(', ')"
-      >
-        <span
-          class="inline-flex items-center gap-1 h-5 px-1.5 min-w-0 rounded-md border border-n-weak text-xs font-440 tracking-normal text-n-slate-11"
+          data-test-id="ticket-status"
+          class="inline-flex items-center gap-1.5 text-[13px] font-460 tracking-normal text-n-slate-11 truncate max-w-full"
         >
           <span
-            class="size-2 rounded-sm flex-shrink-0 bg-n-slate-8"
-            :style="
-              labelChips[0].color
-                ? { backgroundColor: labelChips[0].color }
-                : undefined
-            "
+            data-test-id="ticket-status-dot"
+            class="size-2 rounded-full flex-shrink-0"
+            :class="statusClass"
           />
-          <span class="truncate">{{ labelChips[0].title }}</span>
+          {{ statusLabel }}
         </span>
-        <span
-          v-if="labelChips.length > 1"
-          class="flex-shrink-0 text-xs text-n-slate-10"
-        >
-          {{
-            $t('FLIGHTSMOJO.TICKETS.MORE_LABELS', {
-              count: labelChips.length - 1,
-            })
-          }}
-        </span>
-      </span>
-      <span
-        v-if="hasUnread"
-        data-test-id="ticket-unread"
-        class="flex-shrink-0 ms-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-n-blue-3 text-n-blue-11 text-[11px] font-520 tracking-normal tabular-nums"
+      </div>
+
+      <div
+        v-else-if="column.key === 'subject'"
+        class="flex items-center gap-2 min-w-0"
       >
-        {{ unreadLabel }}
-      </span>
-    </div>
-
-    <div class="flex items-center min-w-0">
-      <span class="truncate text-n-slate-12 font-440 capitalize">
-        {{ currentContact.name }}
-      </span>
-    </div>
-
-    <div
-      class="hidden xl:block truncate text-n-slate-11 tabular-nums"
-      :title="requestedTitle"
-    >
-      {{ requestedAt }}
-    </div>
-
-    <div class="flex items-center gap-1.5 min-w-0 text-n-slate-12">
-      <CardPriorityIcon v-if="chat.priority" :priority="chat.priority" />
-      <span class="truncate" :class="{ 'text-n-slate-10': !chat.priority }">
-        {{ priorityLabel }}
-      </span>
-    </div>
-
-    <div
-      class="hidden xl:block truncate capitalize"
-      :class="teamName ? 'text-n-slate-11' : 'text-n-slate-10'"
-    >
-      {{ teamName || $t('FLIGHTSMOJO.TICKETS.EMPTY_VALUE') }}
-    </div>
-
-    <div class="flex items-center gap-2 min-w-0">
-      <template v-if="showAssigneeName">
-        <Avatar
-          :name="assignee.name"
-          :src="assignee.thumbnail"
-          :size="20"
-          :status="assignee.availability_status"
-          hide-offline-status
+        <span
+          data-test-id="ticket-subject"
+          class="truncate min-w-0 text-[13px] tracking-[-0.13px]"
+          :class="[
+            subject ? 'text-n-slate-12' : 'text-n-slate-11',
+            hasUnread ? 'font-520' : subject ? 'font-460' : 'font-420',
+          ]"
+          :title="subject || previewText"
+        >
+          {{ subject || previewText }}
+        </span>
+        <FmTicketLabelChips
+          v-if="showLabelsInSubject"
+          :chips="labelChips"
+          class="max-w-[40%] flex-shrink-0"
         />
-        <span class="truncate text-n-slate-11">{{ assignee.name }}</span>
-      </template>
-      <span v-else class="text-n-slate-10">
-        {{ $t('FLIGHTSMOJO.TICKETS.EMPTY_VALUE') }}
-      </span>
-    </div>
+        <span
+          v-if="hasUnread"
+          data-test-id="ticket-unread"
+          class="flex-shrink-0 ms-auto inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-n-blue-3 text-n-blue-11 text-[11px] font-520 tracking-normal tabular-nums"
+        >
+          {{ unreadLabel }}
+        </span>
+      </div>
 
-    <div class="hidden xl:flex min-w-0">
-      <!-- FlightsMojo: the shared InboxName renders 14px; the table scale is 13px -->
-      <InboxName
-        v-if="showChannel"
-        :inbox="inbox"
-        class="min-w-0 [&_span]:text-[13px]"
-      />
-    </div>
+      <div
+        v-else-if="column.key === 'requester'"
+        class="flex items-center min-w-0"
+      >
+        <span class="truncate text-n-slate-12 font-440 capitalize">
+          {{ currentContact.name }}
+        </span>
+      </div>
 
-    <div class="truncate text-n-slate-11 text-end tabular-nums">
-      {{ updatedAt }}
-    </div>
+      <div
+        v-else-if="column.key === 'requested'"
+        class="truncate text-n-slate-11 tabular-nums"
+        :title="requestedTitle"
+      >
+        {{ requestedAt }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'priority'"
+        class="flex items-center gap-1.5 min-w-0 text-n-slate-12"
+      >
+        <CardPriorityIcon v-if="chat.priority" :priority="chat.priority" />
+        <span class="truncate" :class="{ 'text-n-slate-10': !chat.priority }">
+          {{ priorityLabel }}
+        </span>
+      </div>
+
+      <div
+        v-else-if="column.key === 'group'"
+        class="truncate capitalize"
+        :class="teamName ? 'text-n-slate-11' : 'text-n-slate-10'"
+      >
+        {{ teamName || emptyValue }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'assignee'"
+        class="flex items-center gap-2 min-w-0"
+      >
+        <template v-if="showAssigneeName">
+          <Avatar
+            :name="assignee.name"
+            :src="assignee.thumbnail"
+            :size="20"
+            :status="assignee.availability_status"
+            hide-offline-status
+          />
+          <span class="truncate text-n-slate-11">{{ assignee.name }}</span>
+        </template>
+        <span v-else class="text-n-slate-10">{{ emptyValue }}</span>
+      </div>
+
+      <div v-else-if="column.key === 'channel'" class="flex min-w-0">
+        <!-- FlightsMojo: the shared InboxName renders 14px; the table scale is 13px -->
+        <InboxName
+          v-if="showChannel"
+          :inbox="inbox"
+          class="min-w-0 [&_span]:text-[13px]"
+        />
+      </div>
+
+      <div
+        v-else-if="column.key === 'updated'"
+        class="truncate text-n-slate-11 text-end tabular-nums"
+      >
+        {{ updatedAt }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'id'"
+        data-test-id="ticket-id"
+        class="truncate text-n-slate-11 tabular-nums"
+      >
+        #{{ chat.id }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'booking_id'"
+        data-test-id="ticket-booking-id"
+        class="truncate tabular-nums"
+        :class="bookingId ? 'text-n-slate-12' : 'text-n-slate-10'"
+      >
+        {{ bookingId || emptyValue }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'labels'"
+        data-test-id="ticket-labels-column"
+        class="flex items-center min-w-0"
+      >
+        <FmTicketLabelChips v-if="labelChips.length" :chips="labelChips" />
+        <span v-else class="text-n-slate-10">{{ emptyValue }}</span>
+      </div>
+
+      <div
+        v-else-if="column.key === 'email'"
+        data-test-id="ticket-email"
+        class="truncate"
+        :class="contactEmail ? 'text-n-slate-11' : 'text-n-slate-10'"
+        :title="contactEmail"
+      >
+        {{ contactEmail || emptyValue }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'first_response'"
+        data-test-id="ticket-first-response"
+        class="truncate text-end tabular-nums"
+        :class="firstResponse ? 'text-n-slate-11' : 'text-n-slate-10'"
+      >
+        {{ firstResponse || emptyValue }}
+      </div>
+
+      <div
+        v-else-if="column.key === 'waiting_since'"
+        data-test-id="ticket-waiting-since"
+        class="truncate text-end tabular-nums"
+        :class="waitingSince ? 'text-n-slate-11' : 'text-n-slate-10'"
+      >
+        {{ waitingSince || emptyValue }}
+      </div>
+    </template>
 
     <div class="flex items-center justify-end">
       <button

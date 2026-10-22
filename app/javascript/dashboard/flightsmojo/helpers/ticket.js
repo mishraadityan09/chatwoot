@@ -32,3 +32,22 @@ export const getBookingId = chat => {
   const value = String(chat?.custom_attributes?.booking_id ?? '').trim();
   return BOOKING_ID_PATTERN.test(value) ? value : '';
 };
+
+/**
+ * A duration as agents read it in a table cell: "45m", "3h 10m", "2d 4h".
+ * Under a minute reads "<1m". Missing or negative input gives ''.
+ * @param {number} seconds
+ * @returns {string}
+ */
+export const formatShortDuration = seconds => {
+  if (seconds === null || seconds === undefined || seconds === '') return '';
+  const total = Number(seconds);
+  if (!Number.isFinite(total) || total < 0) return '';
+  if (total < 60) return '<1m';
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  if (days > 0) return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  if (hours > 0) return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  return `${minutes}m`;
+};

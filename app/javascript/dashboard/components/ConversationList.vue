@@ -6,7 +6,8 @@ import { useChatListKeyboardEvents } from 'dashboard/composables/chatlist/useCha
 import ConversationItem from './ConversationItem.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import IntersectionObserver from 'dashboard/components/IntersectionObserver.vue';
-// FlightsMojo: ticket table header, priority groups, default table layout.
+// FlightsMojo: ticket table header, priority groups, default table layout;
+// overflow-x on the root so a wide column set scrolls sideways (FM-33).
 import FmTicketTableHeader from 'dashboard/flightsmojo/tickets/FmTicketTableHeader.vue';
 import { useTicketTable } from 'dashboard/flightsmojo/tickets/ticketTable';
 
@@ -24,7 +25,8 @@ const props = defineProps({
   isOnExpandedLayout: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['loadMore']);
+// FlightsMojo (FM-34): sortChange carries a header click up to ChatList.
+const emit = defineEmits(['loadMore', 'sortChange']);
 
 const conversationListRef = ref(null);
 const virtualListRef = ref(null);
@@ -66,13 +68,14 @@ defineExpose({ conversationListRef });
 <template>
   <div
     ref="conversationListRef"
-    class="flex-1 min-h-0 overflow-y-auto conversations-list"
+    class="flex-1 min-h-0 overflow-y-auto overflow-x-auto conversations-list"
     :class="{ '!overflow-hidden': isContextMenuOpen }"
   >
     <FmTicketTableHeader
       v-if="showExpandedCards"
       :loaded-count="conversationList.length"
       :folders-id="foldersId"
+      @sort="emit('sortChange', $event)"
     />
     <Virtualizer
       ref="virtualListRef"
@@ -91,10 +94,13 @@ defineExpose({ conversationListRef });
         :show-expanded="showExpandedCards"
       />
     </Virtualizer>
-    <div v-if="isLoading" class="flex justify-center my-4">
+    <div v-if="isLoading" class="sticky left-0 flex justify-center my-4">
       <Spinner class="text-n-brand" />
     </div>
-    <p v-else-if="showEndOfListMessage" class="p-4 text-center text-n-slate-11">
+    <p
+      v-else-if="showEndOfListMessage"
+      class="sticky left-0 p-4 text-center text-n-slate-11"
+    >
       {{ $t('CHAT_LIST.EOF') }}
     </p>
     <IntersectionObserver

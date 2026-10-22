@@ -2,6 +2,11 @@ import { computed } from 'vue';
 import { mount } from '@vue/test-utils';
 import FmTicketRow from '../FmTicketRow.vue';
 import { TICKET_GROUPS_KEY } from '../ticketTable';
+import {
+  TICKET_COLUMNS,
+  TICKET_COLUMNS_KEY,
+  gridStyleFor,
+} from '../ticketColumns';
 
 vi.mock('dashboard/composables/store', async () => {
   const { ref } = await import('vue');
@@ -25,7 +30,18 @@ const baseChat = {
   timestamp: 1727600000,
 };
 
-const mountRow = ({ chat = {}, props = {}, groups = new Map() } = {}) =>
+const columnsContext = keys => ({
+  keys: computed(() => keys),
+  columns: computed(() => keys.map(key => TICKET_COLUMNS[key])),
+  gridStyle: computed(() => gridStyleFor(keys)),
+});
+
+const mountRow = ({
+  chat = {},
+  props = {},
+  groups = new Map(),
+  columns = null,
+} = {}) =>
   mount(FmTicketRow, {
     props: {
       chat: { ...baseChat, ...chat },
@@ -37,7 +53,10 @@ const mountRow = ({ chat = {}, props = {}, groups = new Map() } = {}) =>
       ...props,
     },
     global: {
-      provide: { [TICKET_GROUPS_KEY]: computed(() => groups) },
+      provide: {
+        [TICKET_GROUPS_KEY]: computed(() => groups),
+        ...(columns ? { [TICKET_COLUMNS_KEY]: columnsContext(columns) } : {}),
+      },
       stubs: {
         Avatar: true,
         Checkbox: true,
@@ -139,6 +158,74 @@ describe('FmTicketRow', () => {
 
     expect(wrapper.emitted('selectConversation')).toHaveLength(1);
     expect(wrapper.emitted('deSelectConversation')).toHaveLength(1);
+  });
+
+  it('renders only the chosen columns, in their order', () => {
+    const wrapper = mountRow({ columns: ['updated', 'subject'] });
+    const cells = byTestId(wrapper, 'ticket-row').findAll(':scope > div');
+
+    expect(byTestId(wrapper, 'ticket-status').exists()).toBe(false);
+    // checkbox, updated, subject, row menu
+    expect(cells).toHaveLength(4);
+    expect(cells[2].find('[data-test-id="ticket-subject"]').exists()).toBe(
+      true
+    );
+  });
+
+  const EXTRA_COLUMNS = [
+    'subject',
+    'id',
+    'booking_id',
+    'labels',
+    'email',
+    'first_response',
+    'waiting_since',
+  ];
+
+  it('renders the extra columns when they are chosen', () => {
+    const wrapper = mountRow({
+      columns: EXTRA_COLUMNS,
+      chat: {
+        custom_attributes: { booking_id: '48211902' },
+        labels: ['refund', 'vip'],
+        first_reply_created_at: baseChat.created_at + 90 * 60,
+        waiting_since: baseChat.created_at,
+      },
+      props: {
+        currentContact: { name: 'Fatima Khan', email: 'fatima@example.test' },
+      },
+    });
+
+    expect(byTestId(wrapper, 'ticket-id').text()).toBe('#7');
+    expect(byTestId(wrapper, 'ticket-booking-id').text()).toBe('48211902');
+    expect(byTestId(wrapper, 'ticket-email').text()).toBe(
+      'fatima@example.test'
+    );
+    expect(byTestId(wrapper, 'ticket-first-response').text()).toBe('1h 30m');
+    expect(byTestId(wrapper, 'ticket-waiting-since').text()).not.toBe(
+      'FLIGHTSMOJO.TICKETS.EMPTY_VALUE'
+    );
+    // the labels move out of the subject cell into their own column
+    expect(wrapper.findAll('[data-test-id="ticket-labels"]')).toHaveLength(1);
+    expect(byTestId(wrapper, 'ticket-labels-column').text()).toContain(
+      'refund'
+    );
+  });
+
+  it('shows a dash where an extra column has no value', () => {
+    const wrapper = mountRow({ columns: EXTRA_COLUMNS });
+
+    [
+      'ticket-booking-id',
+      'ticket-email',
+      'ticket-first-response',
+      'ticket-waiting-since',
+      'ticket-labels-column',
+    ].forEach(id =>
+      expect(byTestId(wrapper, id).text()).toBe(
+        'FLIGHTSMOJO.TICKETS.EMPTY_VALUE'
+      )
+    );
   });
 
   it('shows unread as a quiet count, capped at 99+', () => {

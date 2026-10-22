@@ -15,8 +15,21 @@
         "GROUP": "Group",
         "ASSIGNEE": "Assignee",
         "CHANNEL": "Channel",
-        "UPDATED": "Updated"
+        "UPDATED": "Updated",
+        "ID": "ID",
+        "BOOKING_ID": "Booking ID",
+        "LABELS": "Labels",
+        "EMAIL": "Email",
+        "FIRST_RESPONSE": "First response",
+        "WAITING_SINCE": "Waiting since"
       },
+      "COLUMNS_MENU": {
+        "BUTTON": "Columns",
+        "TITLE": "Table columns",
+        "HINT": "Tick to show, drag to reorder",
+        "RESET": "Reset to default"
+      },
+      "SORT_BY_COLUMN": "Sort by {column}",
       "STATUS": {
         "OPEN": "Open",
         "PENDING": "Pending",
