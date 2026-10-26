@@ -1074,8 +1074,12 @@ RSpec.describe ConversationReplyMailer do
         expect(transcript).not_to include('audit@example.com')
       end
 
-      it 'shows the blind copy when the transcript goes to another address' do
-        expect(transcript_to('disputes@example.com')).to include('BCC: audit@example.com')
+      it 'shows the blind copy to someone who works in the account' do
+        expect(transcript_to(agent.email)).to include('BCC: audit@example.com')
+      end
+
+      it 'keeps the blind copy from any outside address' do
+        expect(transcript_to('disputes@example.com')).not_to include('audit@example.com')
       end
     end
   end

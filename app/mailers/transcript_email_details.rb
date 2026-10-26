@@ -22,7 +22,7 @@ module TranscriptEmailDetails
         from: email_from,
         to: Array(to_emails).compact_blank,
         cc: Array(cc_emails).compact_blank,
-        bcc: transcript_for_contact? ? [] : Array(bcc_emails).compact_blank,
+        bcc: transcript_for_staff? ? Array(bcc_emails).compact_blank : [],
         subject: transcript_subject(message),
         delivery: transcript_delivery(message)
       }
@@ -57,7 +57,11 @@ module TranscriptEmailDetails
     subject = @conversation.additional_attributes['mail_subject']
     return "[##{@conversation.display_id}] #{I18n.t('conversations.reply.email_subject')}" if subject.nil?
 
-    @conversation.messages.chat.where('id <= ?', message.id).count > 1 ? "Re: #{subject}" : subject
+    message.id > first_chat_message_id ? "Re: #{subject}" : subject
+  end
+
+  def first_chat_message_id
+    @first_chat_message_id ||= @conversation.messages.chat.minimum(:id) || 0
   end
 
   def transcript_delivery(message)
@@ -68,9 +72,11 @@ module TranscriptEmailDetails
     end
   end
 
-  # Blind copies stay hidden when the customer is the one receiving the transcript.
-  def transcript_for_contact?
-    @transcript_recipient.to_s.strip.casecmp?(@contact&.email.to_s.strip)
+  # Blind copies are internal: they show only when the transcript goes to someone who works
+  # in this account, never to a customer or any outside address.
+  def transcript_for_staff?
+    recipient = @transcript_recipient.to_s.strip
+    recipient.present? && @account.users.from_email(recipient).present?
   end
 
   # The mailer's own helpers read @message; point them at one message, then restore it.
