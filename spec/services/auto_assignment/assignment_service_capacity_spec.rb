@@ -60,6 +60,16 @@ RSpec.describe AutoAssignment::AssignmentService do
       expect([busy_agent, free_agent]).to include(conversation.reload.assignee)
     end
 
+    it 'counts a conversation handed out earlier in the same run' do
+      busy_agent.assigned_conversations.first.update!(status: :resolved) # room for exactly one more
+      account.account_users.find_by(user_id: free_agent.id).update!(agent_capacity_policy: capacity_policy)
+      2.times { create(:conversation, inbox: inbox, account: account, status: 'open', assignee: free_agent) }
+      first, second = Array.new(2) { new_open_conversation }
+
+      expect(service.perform_bulk_assignment(limit: 2)).to eq(1)
+      expect([first, second].map { |conversation| conversation.reload.assignee }).to contain_exactly(busy_agent, nil)
+    end
+
     it 'does not limit agents of inboxes the policy has no limit for' do
       other_inbox = create(:inbox, account: account, enable_auto_assignment: true)
       create(:inbox_member, inbox: other_inbox, user: busy_agent)
@@ -107,6 +117,39 @@ RSpec.describe AutoAssignment::AssignmentService do
 
     it 'still counts everything else' do
       create(:conversation, inbox: inbox, account: account, status: 'open', assignee: busy_agent)
+      conversation = new_open_conversation
+
+      expect(service.perform_bulk_assignment(limit: 1)).to eq(0)
+      expect(conversation.reload.assignee).to be_nil
+    end
+  end
+
+  describe 'two policies on one inbox' do
+    let(:lenient_policy) do
+      AgentCapacityPolicy.create!(account: account, name: 'Lenient', exclusion_rules: { 'excluded_labels' => ['manual'] })
+    end
+    let(:strict_policy) { AgentCapacityPolicy.create!(account: account, name: 'Strict') }
+
+    before do
+      InboxCapacityLimit.create!(agent_capacity_policy: lenient_policy, inbox: inbox, conversation_limit: 1)
+      InboxCapacityLimit.create!(agent_capacity_policy: strict_policy, inbox: inbox, conversation_limit: 1)
+      account.account_users.find_by(user_id: busy_agent.id).update!(agent_capacity_policy: lenient_policy)
+      account.account_users.find_by(user_id: free_agent.id).update!(agent_capacity_policy: strict_policy)
+      [busy_agent, free_agent].each do |agent|
+        create(:conversation, inbox: inbox, account: account, status: 'open', assignee: agent).update!(label_list: ['manual'])
+      end
+    end
+
+    it "applies each policy's exclusions to its own agents only" do
+      conversation = new_open_conversation
+
+      service.perform_bulk_assignment(limit: 1)
+
+      expect(conversation.reload.assignee).to eq(busy_agent)
+    end
+
+    it 'does not lend one policy\'s exclusions to an agent of the other' do
+      allow(OnlineStatusTracker).to receive(:get_available_users).and_return({ free_agent.id.to_s => 'online' })
       conversation = new_open_conversation
 
       expect(service.perform_bulk_assignment(limit: 1)).to eq(0)

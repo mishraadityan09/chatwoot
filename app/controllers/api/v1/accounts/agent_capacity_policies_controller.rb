@@ -4,7 +4,7 @@ class Api::V1::Accounts::AgentCapacityPoliciesController < Api::V1::Accounts::Ba
   before_action :check_authorization
 
   def index
-    policies = Current.account.agent_capacity_policies.includes(:inbox_capacity_limits).order(:id)
+    policies = Current.account.agent_capacity_policies.includes(:inbox_capacity_limits, :account_users).order(:id)
     render json: policies.map(&:api_json)
   end
 

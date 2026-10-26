@@ -47,8 +47,8 @@ class AgentCapacityPolicy < ApplicationRecord
       name: name,
       description: description,
       exclusion_rules: { excluded_labels: excluded_labels, exclude_older_than_hours: exclude_older_than_hours },
-      assigned_agent_count: account_users.count,
-      inbox_capacity_limits: inbox_capacity_limits.order(:id).map(&:api_json)
+      assigned_agent_count: account_users.size,
+      inbox_capacity_limits: inbox_capacity_limits.sort_by(&:id).map(&:api_json)
     }
   end
 

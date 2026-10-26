@@ -7,14 +7,16 @@ class EnableAdminControlsForExistingAccounts < ActiveRecord::Migration[7.0]
   FEATURES = %w[conversation_required_attributes advanced_assignment].freeze
 
   def up
-    Account.find_in_batches(batch_size: 100) do |accounts|
-      accounts.each { |account| account.enable_features!(*FEATURES) }
+    Account.find_each(batch_size: 100) do |account|
+      account.enable_features(*FEATURES)
+      account.save(validate: false) # a plain save would silently skip an account that fails a validation
     end
   end
 
   def down
-    Account.find_in_batches(batch_size: 100) do |accounts|
-      accounts.each { |account| account.disable_features!(*FEATURES) }
+    Account.find_each(batch_size: 100) do |account|
+      account.disable_features(*FEATURES)
+      account.save(validate: false)
     end
   end
 end
