@@ -987,4 +987,96 @@ RSpec.describe ConversationReplyMailer do
       end
     end
   end
+
+  # FlightsMojo (FM-38): each email we sent shows in the transcript as the customer received it.
+  describe 'conversation transcript with the details of sent emails' do
+    let(:account) { create(:account) }
+    let(:agent) { create(:user, email: 'agent.login@example.com', account: account) }
+    let(:class_instance) { described_class.new }
+    let(:email_channel) { create(:channel_email, account: account) }
+    let(:conversation) do
+      create(:conversation, account: account, inbox: email_channel.inbox, assignee: agent,
+                            additional_attributes: { 'mail_subject' => 'Booking 2198675' })
+    end
+    let(:customer_email) { conversation.contact.email }
+
+    def sent_email(content:, **attributes)
+      create(:message, conversation: conversation, account: account, sender: agent, message_type: 'outgoing',
+                       content: content, **attributes)
+    end
+
+    # One transcript per example: the mailer instance is shared through the stub below.
+    def transcript_to(recipient)
+      described_class.conversation_transcript(conversation, recipient).deliver_now.decoded
+    end
+
+    before do
+      allow(described_class).to receive(:new).and_return(class_instance)
+      allow(class_instance).to receive(:smtp_config_set_or_development?).and_return(true)
+    end
+
+    it 'shows the customer address, the real sender and the Message-ID our mail server accepted' do
+      sent_email(content: 'Your e-ticket is attached').update!(source_id: 'conversation/abc/messages/1@inbound.example.com')
+
+      transcript = transcript_to('disputes@example.com')
+
+      expect(transcript).to include("To: #{customer_email}")
+      expect(transcript).to include(account.support_email)
+      expect(transcript).not_to include(agent.email)
+      expect(transcript).to include('Subject: Booking 2198675')
+      expect(transcript).to include('accepted by our mail server')
+      expect(transcript).to include('conversation/abc/messages/1@inbound.example.com')
+    end
+
+    it 'shows a failed send with its reason' do
+      sent_email(content: 'Refund note').update!(status: :failed, external_error: 'Net::ReadTimeout')
+
+      transcript = transcript_to('disputes@example.com')
+
+      expect(transcript).to include('failed to send, Net::ReadTimeout')
+      expect(transcript).not_to include('accepted by our mail server')
+    end
+
+    it 'leaves out the quoted earlier mail at the end of a reply and keeps any other text' do
+      sent_email(content: "Please find the refund note.\n\n> On Thu, Oct 22, 2026 at 4:43 PM Customer wrote:\n>\n> Quoted refund question\n")
+      sent_email(content: "> On Mon, Oct 19, 2026 at 9:00 AM Customer wrote:\n> Earlier question\n\nAnswer written below the quote")
+      sent_email(content: "Reply typed on Windows.\r\n\r\n> On Fri, Oct 23, 2026 at 9:00 AM Customer wrote:\r\n>\r\n> Quoted CRLF question\r\n")
+
+      transcript = transcript_to('disputes@example.com')
+
+      expect(transcript).to include('Please find the refund note.')
+      expect(transcript).not_to include('Quoted refund question')
+      expect(transcript).to include('Earlier question')
+      expect(transcript).to include('Answer written below the quote')
+      expect(transcript).to include('Reply typed on Windows.')
+      expect(transcript).not_to include('Quoted CRLF question')
+    end
+
+    it 'prints the year with the time of each message' do
+      message = sent_email(content: 'Ticket attached')
+      zone = conversation.inbox.timezone.presence || Time.zone.name
+
+      expect(transcript_to('disputes@example.com')).to include(message.created_at.in_time_zone(zone).strftime('%b %d, %Y, %I:%M %p %Z'))
+    end
+
+    context 'when the reply has copies' do
+      before do
+        create(:message, conversation: conversation, account: account, message_type: 'incoming', content: 'Where is my ticket?')
+        sent_email(content: 'Sent again',
+                   content_attributes: { to_emails: [customer_email], cc_emails: ['ops@example.com'], bcc_emails: ['audit@example.com'] })
+      end
+
+      it 'shows the reply subject and the copy, but not the blind copy, to the customer' do
+        transcript = transcript_to(customer_email)
+
+        expect(transcript).to include('Subject: Re: Booking 2198675')
+        expect(transcript).to include('CC: ops@example.com')
+        expect(transcript).not_to include('audit@example.com')
+      end
+
+      it 'shows the blind copy when the transcript goes to another address' do
+        expect(transcript_to('disputes@example.com')).to include('BCC: audit@example.com')
+      end
+    end
+  end
 end

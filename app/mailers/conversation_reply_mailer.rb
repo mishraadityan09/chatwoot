@@ -6,6 +6,7 @@ class ConversationReplyMailer < ApplicationMailer
   include ConversationReplyMailerHelper
   include ReferencesHeaderBuilder
   include EmailAddressParseable
+  include TranscriptEmailDetails # FlightsMojo (FM-38): sent-email details in the transcript
   default from: ENV.fetch('MAILER_SENDER_EMAIL', 'Chatwoot <accounts@chatwoot.com>')
   layout :choose_layout
 
@@ -47,6 +48,7 @@ class ConversationReplyMailer < ApplicationMailer
     return unless smtp_config_set_or_development?
 
     init_conversation_attributes(conversation)
+    @transcript_recipient = to_email # FlightsMojo (FM-38): Bcc stays hidden when the customer receives it
 
     @messages = @conversation.messages.chat.select(&:conversation_transcriptable?)
 
