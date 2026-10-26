@@ -62,6 +62,7 @@ class Conversation < ApplicationRecord
   include ActivityMessageHandler
   include UrlHelper
   include SortHandler
+  include TicketSortHandler # FlightsMojo (FM-34)
   include PushDataHelper
   include ConversationMuteHelpers
 
