@@ -24,17 +24,30 @@ class Api::V1::Accounts::BulkActionsController < Api::V1::Accounts::BaseControll
   # them, exactly like the single-ticket endpoint (RequiredAttributesGuard). Bots and the
   # other bulk fields are not affected.
   def ensure_required_attributes_filled_for_bulk_resolve
-    return unless Current.user.is_a?(User) && conversation_params.dig(:fields, :status) == 'resolved'
+    return unless bulk_resolve_by_user?
 
     service = Conversations::RequiredAttributesService.new(Current.account)
-    return if service.required_keys.empty?
+    blocked = conversations_missing_required_attributes(service)
+    return if blocked.empty?
 
-    blocked = Current.account.conversations.where(display_id: params[:ids]).filter_map do |conversation|
+    render_missing_required_attributes(service, blocked)
+  end
+
+  def bulk_resolve_by_user?
+    Current.user.is_a?(User) && conversation_params.dig(:fields, :status) == 'resolved'
+  end
+
+  # [[display_id, missing keys], ...] for the selected conversations that still miss one.
+  def conversations_missing_required_attributes(service)
+    return [] if service.required_keys.empty?
+
+    Current.account.conversations.where(display_id: params[:ids]).filter_map do |conversation|
       missing = service.missing_keys(conversation)
       [conversation.display_id, missing] if missing.any?
     end
-    return if blocked.empty?
+  end
 
+  def render_missing_required_attributes(service, blocked)
     keys = blocked.flat_map(&:last).uniq
     render json: { error: I18n.t('conversations.required_attributes.missing_bulk',
                                  attributes: service.display_names(keys).join(', '),

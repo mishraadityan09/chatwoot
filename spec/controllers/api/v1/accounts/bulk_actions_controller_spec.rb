@@ -356,6 +356,5 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
         expect(Conversation.first(2).map(&:status)).to all(eq('snoozed'))
       end
     end
-
   end
 end
