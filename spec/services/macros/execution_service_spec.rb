@@ -196,6 +196,35 @@ RSpec.describe Macros::ExecutionService, type: :service do
     end
   end
 
+  # FlightsMojo (FM-24): a macro run by a person cannot resolve past a missing required attribute.
+  describe '#resolve_conversation' do
+    before do
+      account.enable_features!('conversation_required_attributes')
+      create(:custom_attribute_definition, account: account, attribute_key: 'booking_id', attribute_display_name: 'Booking ID',
+                                           attribute_display_type: :text, attribute_model: :conversation_attribute)
+      account.update!(settings: account.settings.merge('conversation_required_attributes' => ['booking_id']))
+    end
+
+    after { Current.reset }
+
+    it 'leaves the conversation open and says why in a private note while the attribute is missing' do
+      expect { service.send(:resolve_conversation, []) }.to change(Message, :count).by(1)
+
+      expect(conversation.reload).to be_open
+      note = Message.last
+      expect(note.private).to be(true)
+      expect(note.content).to include('Booking ID')
+    end
+
+    it 'resolves once the attribute is filled in' do
+      conversation.update!(custom_attributes: { 'booking_id' => '48211902' })
+
+      expect { service.send(:resolve_conversation, []) }.not_to change(Message, :count)
+
+      expect(conversation.reload).to be_resolved
+    end
+  end
+
   describe '#send_webhook_event' do
     it 'sends a webhook event' do
       expect(WebhookJob).to receive(:perform_later)

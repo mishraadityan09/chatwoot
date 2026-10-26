@@ -69,11 +69,17 @@ class Conversations::RequiredAttributesService
   # The settings page stores the pattern the way JavaScript prints it: /source/flags.
   def regexp_for(pattern)
     match = pattern.match(%r{\A/(.+)/([a-z]*)\z}m)
-    return Regexp.new(pattern) unless match
-
+    source, flags = match ? [match[1], match[2]] : [pattern, '']
     options = 0
-    options |= Regexp::IGNORECASE if match[2].include?('i')
-    options |= Regexp::MULTILINE if match[2].include?('s') # JS dotAll
-    Regexp.new(match[1], options)
+    options |= Regexp::IGNORECASE if flags.include?('i')
+    options |= Regexp::MULTILINE if flags.include?('s') # JS dotAll
+    source = whole_value_anchors(source) unless flags.include?('m') # JS multiline keeps line anchors
+    Regexp.new(source, options)
+  end
+
+  # In JavaScript ^ and $ mean the start and end of the whole value; in Ruby they mean a line.
+  # Without this a value such as "12345\nabc" would pass /^\d{1,10}$/ on the server only.
+  def whole_value_anchors(source)
+    source.sub(/\A\^/, '\\A').sub(/(?<!\\)\$\z/, '\\z')
   end
 end

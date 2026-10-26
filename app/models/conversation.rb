@@ -63,6 +63,7 @@ class Conversation < ApplicationRecord
   include UrlHelper
   include SortHandler
   include TicketSortHandler # FlightsMojo (FM-34)
+  include RequiredAttributesBeforeResolve # FlightsMojo (FM-24)
   include PushDataHelper
   include ConversationMuteHelpers
 

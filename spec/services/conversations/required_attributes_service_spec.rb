@@ -86,6 +86,20 @@ RSpec.describe Conversations::RequiredAttributesService do
 
         expect(service.missing_keys(conversation)).to eq(['booking_id'])
       end
+
+      it 'reads ^ and $ as the whole value, the way the dashboard does' do
+        conversation.update!(custom_attributes: { 'booking_id' => "48211902\nnot a booking id" })
+
+        expect(service.missing_keys(conversation)).to eq(['booking_id'])
+      end
+    end
+
+    it 'keeps line anchors when the pattern asks for them with the m flag' do
+      define_attribute('booking_id', regex_pattern: '/^\d{1,10}$/m')
+      require_attributes('booking_id')
+      conversation.update!(custom_attributes: { 'booking_id' => "48211902\nnot a booking id" })
+
+      expect(service.missing_keys(conversation)).to eq([])
     end
 
     it 'does not block when the pattern itself is broken' do

@@ -61,6 +61,19 @@ class Macros::ExecutionService < ActionService
     mb.perform
   end
 
+  # FlightsMojo (FM-24): a macro run by a person must not resolve a conversation that still
+  # misses an attribute the administrator made mandatory (for example the Booking ID). The
+  # macro leaves the conversation open and writes a private note saying why, so the agent sees
+  # it in the ticket. Automation rules do not run through this class and keep resolving.
+  def resolve_conversation(params)
+    service = Conversations::RequiredAttributesService.new(@account)
+    missing = service.missing_keys(@conversation)
+    return super if missing.empty?
+
+    add_private_note([I18n.t('conversations.required_attributes.missing_macro',
+                             attributes: service.display_names(missing).join(', '))])
+  end
+
   def send_webhook_event(webhook_url)
     payload = @conversation.webhook_data.merge(event: 'macro.executed')
     WebhookJob.perform_later(webhook_url.first, payload)
