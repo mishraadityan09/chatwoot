@@ -17,6 +17,7 @@ import { useInbox } from 'dashboard/composables/useInbox';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { getBookingId } from 'dashboard/flightsmojo/helpers/ticket';
 
 const props = defineProps({
   chat: {
@@ -113,14 +114,10 @@ const copyConversationId = async () => {
 };
 
 // FlightsMojo: booking id stamped by the support bot (conversation custom
-// attribute) surfaces in the header, click-to-copy. The public widget API
-// lets a visitor write this attribute too, so only the shape the bot itself
-// stamps (a numeric id) is shown.
-const BOOKING_ID_PATTERN = /^\d{1,10}$/;
-const bookingId = computed(() => {
-  const value = String(props.chat?.custom_attributes?.booking_id ?? '');
-  return BOOKING_ID_PATTERN.test(value) ? value : null;
-});
+// attribute) surfaces in the header, click-to-copy. getBookingId keeps the
+// one rule for what counts as a booking id (the attribute is writable from
+// the public widget too, so only a plain numeric id is shown).
+const bookingId = computed(() => getBookingId(props.chat) || null);
 
 const copyBookingId = async () => {
   try {

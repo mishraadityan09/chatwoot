@@ -17,9 +17,9 @@ export const getTicketSubject = chat => {
   return clean(mailSubject) || clean(subject);
 };
 
-// Same shape the conversation header chip accepts (ConversationHeader.vue):
-// the attribute is also writable from the website pre-chat form, so only a
-// plain numeric booking id is shown.
+// The one rule for what counts as a booking id (the header chip, the card
+// and the table all use it): the attribute is also writable from the website
+// pre-chat form, so only a plain numeric booking id is shown.
 const BOOKING_ID_PATTERN = /^\d{1,10}$/;
 
 /**
