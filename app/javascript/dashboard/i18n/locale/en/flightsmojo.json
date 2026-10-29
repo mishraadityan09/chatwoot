@@ -58,7 +58,9 @@
       "VIEWS": "Views",
       "TICKET": "Ticket",
       "ID": "#{id}",
-      "CLOSE": "Close tab"
+      "CLOSE": "Close tab",
+      "SCROLL_LEFT": "Scroll tabs left",
+      "SCROLL_RIGHT": "Scroll tabs right"
     },
     "REPORTS": {
       "CHANNEL": {
