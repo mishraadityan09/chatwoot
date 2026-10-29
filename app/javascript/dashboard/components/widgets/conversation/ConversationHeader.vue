@@ -9,6 +9,7 @@ import MoreActions from './MoreActions.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ConversationCallButton from './ConversationCallButton.vue';
+// FlightsMojo: Play mode "Next ticket" controls (hidden unless playing).
 import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
@@ -16,6 +17,7 @@ import { useInbox } from 'dashboard/composables/useInbox';
 import { useAlert } from 'dashboard/composables';
 import { useI18n } from 'vue-i18n';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
+import { getBookingId } from 'dashboard/flightsmojo/helpers/ticket';
 
 const props = defineProps({
   chat: {
@@ -33,7 +35,7 @@ const store = useStore();
 const route = useRoute();
 const conversationHeader = ref(null);
 const { width } = useElementSize(conversationHeader);
-const { isAWebWidgetInbox } = useInbox();
+const { isAWebWidgetInbox, isAnEmailChannel } = useInbox();
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 const accountId = computed(() => store.getters.getCurrentAccountId);
@@ -66,6 +68,11 @@ const isHMACVerified = computed(() => {
     return true;
   }
   return chatMetadata.value.hmac_verified;
+});
+
+const mailSubject = computed(() => {
+  if (!isAnEmailChannel.value) return '';
+  return props.chat.additional_attributes?.mail_subject;
 });
 
 const currentContact = computed(() =>
@@ -107,19 +114,15 @@ const copyConversationId = async () => {
 };
 
 // FlightsMojo: booking id stamped by the support bot (conversation custom
-// attribute) surfaces in the header, click-to-copy. The public widget API
-// lets a visitor write this attribute too, so only the shape the bot itself
-// stamps (a numeric id) is shown.
-const BOOKING_ID_PATTERN = /^\d{1,10}$/;
-const bookingId = computed(() => {
-  const value = String(props.chat?.custom_attributes?.booking_id ?? '');
-  return BOOKING_ID_PATTERN.test(value) ? value : null;
-});
+// attribute) surfaces in the header, click-to-copy. getBookingId keeps the
+// one rule for what counts as a booking id (the attribute is writable from
+// the public widget too, so only a plain numeric id is shown).
+const bookingId = computed(() => getBookingId(props.chat) || null);
 
 const copyBookingId = async () => {
   try {
     await copyTextToClipboard(String(bookingId.value));
-    useAlert(t('CONVERSATION.HEADER.BOOKING_ID_COPY_SUCCESS'));
+    useAlert(t('FLIGHTSMOJO.BOOKING_ID.COPY_SUCCESS'));
   } catch (error) {
     // error
   }
@@ -134,10 +137,11 @@ const copyBookingId = async () => {
     <div
       class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
     >
+      <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale: Back 16 -> 13 px -->
       <BackButton
         v-if="showBackButton"
         :back-url="backButtonUrl"
-        class="me-2"
+        class="me-2 !text-[13px]"
       />
       <Avatar
         :name="currentContact.name"
@@ -162,29 +166,40 @@ const copyBookingId = async () => {
           />
           <button
             v-if="bookingId"
-            v-tooltip="$t('CONVERSATION.HEADER.BOOKING_ID_COPY_TOOLTIP')"
+            v-tooltip="$t('FLIGHTSMOJO.BOOKING_ID.COPY_TOOLTIP')"
             type="button"
             class="flex-shrink-0 px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12 hover:bg-n-slate-4 cursor-pointer"
             @click="copyBookingId"
           >
-            {{ $t('CONVERSATION.HEADER.BOOKING_ID_CHIP', { id: bookingId }) }}
+            {{ $t('FLIGHTSMOJO.BOOKING_ID.CHIP', { id: bookingId }) }}
           </button>
         </div>
 
         <div
-          class="flex items-center gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
+          class="flex items-center max-w-full gap-1 overflow-hidden text-xs conversation--header--actions text-n-slate-11 text-ellipsis whitespace-nowrap"
         >
           <button
             type="button"
-            class="truncate text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
+            class="truncate shrink-0 text-label-small text-n-slate-11 hover:text-n-slate-12 !p-0 cucursor-pointer"
             @click="copyConversationId"
           >
             {{ `#${chat.id}` }}
           </button>
           <span v-if="hasMultipleInboxes">•</span>
           <InboxName v-if="hasMultipleInboxes" :inbox="inbox" class="!mx-0" />
+          <span v-if="mailSubject">•</span>
+          <span
+            v-if="mailSubject"
+            v-tooltip="mailSubject"
+            class="flex-1 min-w-16 truncate text-label-small text-n-slate-11"
+          >
+            {{ mailSubject }}
+          </span>
           <span v-if="isSnoozed">•</span>
-          <span v-if="isSnoozed" class="font-medium text-n-amber-10">
+          <span
+            v-if="isSnoozed"
+            class="min-w-0 truncate font-medium text-n-amber-10 shrink-0"
+          >
             {{ snoozedDisplayText }}
           </span>
         </div>

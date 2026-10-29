@@ -13,7 +13,7 @@ class ReportingEventListener < BaseListener
                                               event_end_time),
       account_id: conversation.account_id,
       inbox_id: conversation.inbox_id,
-      user_id: conversation.assignee_id,
+      user_id: fm_resolver_id(conversation, event),
       conversation_id: conversation.id,
       event_start_time: conversation.created_at,
       event_end_time: event_end_time
@@ -124,6 +124,16 @@ class ReportingEventListener < BaseListener
   end
 
   private
+
+  # FlightsMojo: a resolution is credited to the assignee only when somebody performed it. The
+  # auto-resolve job (Account settings → auto resolve after N days) has no actor, so those
+  # resolutions count for the account and the inbox but for no agent. Events without the flag
+  # (sync dispatch, jobs queued before this release) keep upstream's behaviour.
+  def fm_resolver_id(conversation, event)
+    return if event.data[:fm_system_action]
+
+    conversation.assignee_id
+  end
 
   def create_conversation_opened_event(conversation, time_since_resolved, business_hours_value, start_time, event_end_time)
     reporting_event = ReportingEvent.new(

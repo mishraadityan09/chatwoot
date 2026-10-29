@@ -106,6 +106,48 @@ const chatSortOptions = computed(() => [
     label: t('CHAT_LIST.SORT_ORDER_ITEMS.waiting_since_desc.TEXT'),
     value: 'waiting_since_desc',
   },
+  // FlightsMojo (FM-34): the ticket table's column sorts, so the menu shows
+  // the active one by name too.
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.status_asc.TEXT'),
+    value: 'status_asc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.status_desc.TEXT'),
+    value: 'status_desc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.requester_asc.TEXT'),
+    value: 'requester_asc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.requester_desc.TEXT'),
+    value: 'requester_desc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.assignee_asc.TEXT'),
+    value: 'assignee_asc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.assignee_desc.TEXT'),
+    value: 'assignee_desc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.team_asc.TEXT'),
+    value: 'team_asc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.team_desc.TEXT'),
+    value: 'team_desc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.inbox_asc.TEXT'),
+    value: 'inbox_asc',
+  },
+  {
+    label: t('CHAT_LIST.SORT_ORDER_ITEMS.inbox_desc.TEXT'),
+    value: 'inbox_desc',
+  },
 ]);
 
 const activeChatStatusLabel = computed(
@@ -161,11 +203,12 @@ const handleSortChange = value => {
         'ltr:right-0 rtl:left-0': isOnExpandedLayout,
       }"
     >
+      <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: labels 14 -> 13 px -->
       <div
         v-if="showStatusFilter"
         class="flex items-center justify-between gap-2"
       >
-        <span class="text-sm truncate text-n-slate-12">
+        <span class="text-[13px] truncate text-n-slate-12">
           {{ $t('CHAT_LIST.CHAT_SORT.STATUS') }}
         </span>
         <SelectMenu
@@ -180,7 +223,7 @@ const handleSortChange = value => {
         class="flex items-center justify-between gap-2"
         :class="{ 'mt-4': showStatusFilter }"
       >
-        <span class="text-sm truncate text-n-slate-12">
+        <span class="text-[13px] truncate text-n-slate-12">
           {{ $t('CHAT_LIST.CHAT_SORT.ORDER_BY') }}
         </span>
         <SelectMenu

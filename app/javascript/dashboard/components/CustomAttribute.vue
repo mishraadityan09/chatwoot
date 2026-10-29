@@ -216,8 +216,9 @@ export default {
           />
         </div>
         <div class="flex items-center justify-between w-full">
+          <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
           <span
-            class="w-full inline-flex gap-1.5 items-start font-medium whitespace-nowrap text-sm mb-0"
+            class="w-full inline-flex gap-1.5 items-start font-medium whitespace-nowrap text-[13px] mb-0"
             :class="
               v$.editedValue.$error ? 'text-n-ruby-11' : 'text-n-slate-12'
             "
@@ -248,7 +249,7 @@ export default {
             ref="inputfield"
             v-model="editedValue"
             :type="inputType"
-            class="!h-8 ltr:!rounded-r-none rtl:!rounded-l-none !mb-0 !text-sm"
+            class="!h-8 ltr:!rounded-r-none rtl:!rounded-l-none !mb-0 !text-[13px]"
             autofocus="true"
             :class="{ error: v$.editedValue.$error }"
             @blur="v$.editedValue.$touch"

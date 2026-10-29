@@ -14,6 +14,9 @@ const props = defineProps({
   badgeCount: { type: [Number, String], default: 0 },
   hideTreeLine: { type: Boolean, default: false },
   thinTreeLine: { type: Boolean, default: false },
+  // FlightsMojo: extra classes for the label text (e.g. `capitalize` for team
+  // names, which the Team model stores in lower case).
+  labelClass: { type: String, default: '' },
 });
 
 const { resolvePermissions, resolveFeatureFlag } = useSidebarContext();
@@ -40,11 +43,14 @@ const TREE_CONNECTOR =
         !hideTreeLine && thinTreeLine,
     }"
   >
+    <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm
+         on the label). The size sits on the link because the dashboard CSS gives
+         every <a> 14 px, which also covers custom leaf components (ChannelLeaf). -->
     <component
       :is="to ? 'router-link' : 'div'"
       :to="to"
       :title="label"
-      class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg ltr:hover:bg-gradient-to-r rtl:hover:bg-gradient-to-l from-transparent via-n-slate-3/70 to-n-slate-3/70 group min-w-0"
+      class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg text-[13px] ltr:hover:bg-gradient-to-r rtl:hover:bg-gradient-to-l from-transparent via-n-slate-3/70 to-n-slate-3/70 group min-w-0"
       :class="{
         'text-n-slate-12 bg-n-alpha-2 active': active,
       }"
@@ -58,7 +64,9 @@ const TREE_CONNECTOR =
         <span v-if="icon" class="size-4 grid place-content-center rounded-full">
           <Icon :icon="icon" class="size-4 inline-block" />
         </span>
-        <div class="flex-1 truncate min-w-0 text-sm">{{ label }}</div>
+        <div class="flex-1 truncate min-w-0" :class="labelClass">
+          {{ label }}
+        </div>
         <SidebarUnreadBadge :count="badgeCount" />
       </template>
     </component>

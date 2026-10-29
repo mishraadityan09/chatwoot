@@ -52,12 +52,18 @@ describe('SidebarGroupLeaf', () => {
     );
   });
 
+  // FlightsMojo: badges show exact counts; only five-digit counts are capped.
   it('caps large unread counts', () => {
-    const wrapper = mountLeaf({ badgeCount: 120 });
-
-    expect(wrapper.find('[data-test-id="sidebar-unread-badge"]').text()).toBe(
-      '99+'
-    );
+    expect(
+      mountLeaf({ badgeCount: 868 })
+        .find('[data-test-id="sidebar-unread-badge"]')
+        .text()
+    ).toBe('868');
+    expect(
+      mountLeaf({ badgeCount: 12000 })
+        .find('[data-test-id="sidebar-unread-badge"]')
+        .text()
+    ).toBe('9999+');
   });
 
   it('passes unread count to custom leaf components', () => {
@@ -72,5 +78,19 @@ describe('SidebarGroupLeaf', () => {
     });
 
     expect(wrapper.find('[data-test-id="custom-leaf-count"]').text()).toBe('4');
+  });
+  it('applies labelClass to the label text (FlightsMojo: team names are stored lower-case)', () => {
+    const wrapper = mountLeaf({ label: 'irop desk', labelClass: 'capitalize' });
+    const label = wrapper.find('.flex-1.truncate');
+    expect(label.exists()).toBe(true);
+    expect(label.classes()).toContain('capitalize');
+    expect(label.text()).toBe('irop desk');
+  });
+
+  it('adds no extra class to the label by default', () => {
+    const wrapper = mountLeaf({ label: 'India.Mail' });
+    expect(wrapper.find('.flex-1.truncate').classes()).not.toContain(
+      'capitalize'
+    );
   });
 });

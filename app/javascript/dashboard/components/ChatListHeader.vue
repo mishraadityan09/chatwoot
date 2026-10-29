@@ -5,6 +5,8 @@ import { formatNumber } from '@chatwoot/utils';
 import wootConstants from 'dashboard/constants/globals';
 
 import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
+// FlightsMojo (FM-33): the ticket table's column picker
+import FmTicketColumnsMenu from 'dashboard/flightsmojo/tickets/FmTicketColumnsMenu.vue';
 import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
@@ -92,18 +94,19 @@ const toggleConversationLayout = () => {
       <h1 class="text-base font-medium truncate text-n-slate-12" :title="title">
         {{ title }}
       </h1>
+      <!-- FlightsMojo: chips at 12px (text-xs) instead of 10px, on the table scale -->
       <span
         v-if="
           allCount > 0 && hasAppliedFiltersOrActiveFolders && !isListLoading
         "
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xs text-n-slate-12 shrink-0"
         :title="allCount"
       >
         {{ formattedAllCount }}
       </span>
       <span
         v-if="!hasAppliedFiltersOrActiveFolders"
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xs text-n-slate-12 shrink-0"
       >
         {{ $t(`CHAT_LIST.CHAT_STATUS_FILTER_ITEMS.${activeStatus}.TEXT`) }}
       </span>
@@ -169,6 +172,10 @@ const toggleConversationLayout = () => {
           :class="{ 'ltr:right-0 rtl:left-0': isOnExpandedLayout }"
         />
       </div>
+      <FmTicketColumnsMenu
+        v-if="isOnExpandedLayout && !isContactScoped"
+        :is-on-expanded-layout="isOnExpandedLayout"
+      />
       <ConversationBasicFilter
         v-if="!isContactScoped"
         :is-on-expanded-layout="isOnExpandedLayout"

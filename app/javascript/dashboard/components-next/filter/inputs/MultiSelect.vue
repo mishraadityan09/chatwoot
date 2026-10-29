@@ -112,6 +112,7 @@ const toggleOption = option => {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: value chips and placeholder 14 -> 13 px -->
   <DropdownContainer class="min-w-0">
     <template #trigger="{ toggle }">
       <button
@@ -122,7 +123,7 @@ const toggleOption = option => {
         <div
           v-for="item in selectedVisibleItems"
           :key="item.name"
-          class="px-3 border-e border-n-weak text-n-slate-12 text-sm flex gap-2 items-center max-w-[100px] min-w-0"
+          class="px-3 border-e border-n-weak text-n-slate-12 text-[13px] flex gap-2 items-center max-w-[100px] min-w-0"
         >
           <Icon v-if="item.icon" :icon="item.icon" class="flex-shrink-0" />
           <EmojiIcon
@@ -141,7 +142,7 @@ const toggleOption = option => {
         <div
           v-if="remainingItems.length > 0"
           v-tooltip.top="remainingTooltip"
-          class="px-3 border-e border-n-weak text-n-slate-12 text-sm flex gap-2 items-center max-w-[100px] flex-shrink-0"
+          class="px-3 border-e border-n-weak text-n-slate-12 text-[13px] flex gap-2 items-center max-w-[100px] flex-shrink-0"
         >
           <span class="truncate">{{
             t('COMBOBOX.MORE', { count: remainingItems.length })
@@ -151,7 +152,14 @@ const toggleOption = option => {
           <Icon icon="i-lucide-plus" />
         </div>
       </button>
-      <Button v-else sm slate faded @click="toggleDropdown(toggle)">
+      <Button
+        v-else
+        sm
+        slate
+        faded
+        class="!text-[13px]"
+        @click="toggleDropdown(toggle)"
+      >
         <template #icon>
           <Icon icon="i-lucide-plus" class="text-n-slate-11" />
         </template>

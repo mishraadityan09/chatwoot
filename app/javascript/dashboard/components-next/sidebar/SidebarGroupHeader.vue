@@ -60,11 +60,12 @@ const onClick = event => {
     <div
       class="flex items-center gap-1.5 flex-grow justify-between min-w-0 flex-1"
     >
+      <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm) -->
       <span
-        class="truncate"
+        class="truncate text-[13px]"
         :class="{
-          'text-body-main': !isActive,
-          'font-medium text-sm': isActive || hasActiveChild,
+          'font-420': !isActive && !hasActiveChild,
+          'font-medium': isActive || hasActiveChild,
         }"
       >
         {{ label }}

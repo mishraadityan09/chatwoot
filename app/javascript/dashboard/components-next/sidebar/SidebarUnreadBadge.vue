@@ -10,8 +10,10 @@ const normalizedCount = computed(() => {
   return Number.isFinite(count) && count > 0 ? count : 0;
 });
 
+// FlightsMojo: exact counts like Zendesk's views (upstream caps at 99+); the
+// cap only guards the pill's width.
 const displayCount = computed(() =>
-  normalizedCount.value > 99 ? '99+' : String(normalizedCount.value)
+  normalizedCount.value > 9999 ? '9999+' : String(normalizedCount.value)
 );
 </script>
 

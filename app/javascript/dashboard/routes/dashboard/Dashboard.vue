@@ -25,6 +25,8 @@ import CopilotLauncher from 'dashboard/components-next/copilot/CopilotLauncher.v
 import CopilotContainer from 'dashboard/components/copilot/CopilotContainer.vue';
 
 import MobileSidebarLauncher from 'dashboard/components-next/sidebar/MobileSidebarLauncher.vue';
+// FlightsMojo: in-app ticket tabs above the page (Zendesk-style top bar).
+import FmTicketTabs from 'dashboard/flightsmojo/tabs/FmTicketTabs.vue';
 import { useCallsStore } from 'dashboard/stores/calls';
 
 export default {
@@ -38,6 +40,7 @@ export default {
     CopilotContainer,
     FloatingCallWidget,
     MobileSidebarLauncher,
+    FmTicketTabs,
   },
   setup() {
     const upgradePageRef = ref(null);
@@ -153,7 +156,14 @@ export default {
         />
       </UpgradePage>
       <template v-if="!showUpgradePage">
-        <router-view />
+        <!-- FlightsMojo: ticket tab bar above the page. The inner div repeats
+             <main>'s flex setup so pages keep exactly the layout they had. -->
+        <div class="flex flex-col flex-1 min-w-0 min-h-0 h-full">
+          <FmTicketTabs />
+          <div class="flex flex-1 w-full min-h-0 min-w-0 overflow-hidden">
+            <router-view />
+          </div>
+        </div>
         <CopilotLauncher />
         <MobileSidebarLauncher
           :is-mobile-sidebar-open="isMobileSidebarOpen"

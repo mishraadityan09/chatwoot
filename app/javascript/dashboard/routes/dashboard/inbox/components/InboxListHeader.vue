@@ -87,12 +87,14 @@ export default {
         {{ $t('INBOX.LIST.TITLE') }}
       </h1>
       <div class="relative">
+        <!-- FlightsMojo (FM-37): picker trigger 12 -> 13 px -->
         <NextButton
           :label="$t('INBOX.LIST.DISPLAY_DROPDOWN')"
           icon="i-lucide-chevron-down"
           trailing-icon
           slate
           xs
+          class="!text-[13px]"
           :variant="showInboxDisplayMenu ? 'faded' : 'solid'"
           @click="openInboxDisplayMenu"
         />

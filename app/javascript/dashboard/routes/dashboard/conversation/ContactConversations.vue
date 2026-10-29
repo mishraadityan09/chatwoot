@@ -108,6 +108,7 @@ onMounted(() => {
       v-else
       class="contact-conversation--list [&>.conversation:last-child]:!border-b-0 [&>.conversation:last-child:hover]:!border-b-0 [&>.conversation:last-child]:!rounded-b-lg"
     >
+      <!-- FlightsMojo: show-booking-id adds the BK-<id> chip to each card -->
       <ConversationCard
         v-for="conversation in previousConversations"
         :key="conversation.id"
@@ -119,6 +120,7 @@ onMounted(() => {
         :show-inbox-name="showInboxName"
         hide-thumbnail
         compact
+        show-booking-id
         @click="onCardClick(conversation, $event)"
         @contextmenu="openContextMenu(conversation, $event)"
       />

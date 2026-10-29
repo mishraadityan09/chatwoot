@@ -155,15 +155,16 @@ export default {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale (four text-sm -> text-[13px]) -->
   <div class="relative">
     <div class="flex justify-between">
       <div class="flex justify-between w-full mb-1">
         <div>
-          <p v-if="watchersList.length" class="m-0 text-sm total-watchers">
+          <p v-if="watchersList.length" class="m-0 text-[13px] total-watchers">
             <Spinner v-if="watchersUiFlas.isFetching" size="tiny" />
             {{ totalWatchersText }}
           </p>
-          <p v-else class="m-0 text-sm text-n-slate-10">
+          <p v-else class="m-0 text-[13px] text-n-slate-10">
             {{ $t('CONVERSATION_PARTICIPANTS.NO_PARTICIPANTS_TEXT') }}
           </p>
         </div>
@@ -185,7 +186,7 @@ export default {
         :show-more-thumbnails-count="showMoreThumbs"
         :users-list="thumbnailList"
       />
-      <p v-if="isUserWatching" class="m-0 text-sm text-n-slate-10">
+      <p v-if="isUserWatching" class="m-0 text-[13px] text-n-slate-10">
         {{ $t('CONVERSATION_PARTICIPANTS.YOU_ARE_WATCHING') }}
       </p>
       <NextButton
@@ -212,7 +213,7 @@ export default {
     >
       <div class="flex items-center justify-between mb-1">
         <h4
-          class="m-0 overflow-hidden text-sm whitespace-nowrap text-ellipsis text-n-slate-12"
+          class="m-0 overflow-hidden text-[13px] whitespace-nowrap text-ellipsis text-n-slate-12"
         >
           {{ $t('CONVERSATION_PARTICIPANTS.ADD_PARTICIPANTS') }}
         </h4>

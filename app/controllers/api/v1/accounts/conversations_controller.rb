@@ -1,11 +1,13 @@
 class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseController
+  include RequiredAttributesGuard # FlightsMojo: required conversation attributes before resolving
   include Events::Types
   include DateRangeHelper
   include HmacConcern
   include ConversationCustomAttributesConcern
+  include ConversationAssignmentTargetsConcern
 
   before_action :conversation, except: [:index, :meta, :search, :create, :filter]
-  before_action :inbox, :contact, :contact_inbox, only: [:create]
+  before_action :validate_assignment_targets, :inbox, :contact, :contact_inbox, only: [:create]
 
   ATTACHMENT_RESULTS_PER_PAGE = 100
 

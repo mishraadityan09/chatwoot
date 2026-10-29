@@ -117,8 +117,9 @@ export default {
               <div
                 class="flex items-center justify-between w-full min-w-0 gap-2"
               >
+                <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
                 <span
-                  class="my-0 overflow-hidden text-sm leading-4 whitespace-nowrap text-ellipsis"
+                  class="my-0 overflow-hidden text-[13px] leading-4 whitespace-nowrap text-ellipsis"
                   :title="option.name"
                 >
                   {{ option.name }}
@@ -175,7 +176,7 @@ export default {
         </WootDropdownMenu>
         <h4
           v-if="noResult"
-          class="w-full justify-center items-center flex text-n-slate-10 py-2 px-2.5 overflow-hidden whitespace-nowrap text-ellipsis text-sm"
+          class="w-full justify-center items-center flex text-n-slate-10 py-2 px-2.5 overflow-hidden whitespace-nowrap text-ellipsis text-[13px]"
         >
           {{ noSearchResult }}
         </h4>
@@ -190,7 +191,7 @@ export default {
 }
 
 .search-input {
-  @apply m-0 w-full border border-solid border-transparent h-8 text-sm text-n-slate-12 rounded-md focus:border-n-brand bg-n-background dark:bg-n-background;
+  @apply m-0 w-full border border-solid border-transparent h-8 text-[13px] text-n-slate-12 rounded-md focus:border-n-brand bg-n-background dark:bg-n-background;
 }
 
 .multiselect-dropdown--item {

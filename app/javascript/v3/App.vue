@@ -56,6 +56,8 @@ export default {
 @tailwind utilities;
 
 @import '../dashboard/assets/scss/next-colors';
+// FlightsMojo: same theme on the login pages.
+@import '../dashboard/assets/scss/flightsmojo';
 
 html,
 body {

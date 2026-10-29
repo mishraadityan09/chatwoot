@@ -122,12 +122,14 @@ const toggleSelected = option => {
 <template>
   <DropdownContainer class="min-w-0">
     <template #trigger="{ toggle }">
+      <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: 14 -> 13 px -->
       <Button
         v-if="selectedItem"
         sm
         slate
         faded
         type="button"
+        class="!text-[13px]"
         :icon="selectedItem.icon"
         :label="selectedItem.name"
         @click="toggle"
@@ -146,6 +148,7 @@ const toggleSelected = option => {
         slate
         faded
         type="button"
+        class="!text-[13px]"
         :trailing-icon="placeholderTrailingIcon"
         @click="toggle"
       >

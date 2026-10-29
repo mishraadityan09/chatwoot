@@ -99,16 +99,16 @@ class Reports::RawDataSource < Reports::DataSource
 
   def summary_scope
     scope = account.reporting_events.where(created_at: range)
+    scope = scope.where(inbox_id: inbox_id) if inbox_id.present? # FlightsMojo: channel filter
     return scope.joins(:conversation) if dimension_type == 'team'
 
     scope
   end
 
   def summary_conversation_counts
-    account.conversations
-           .where(created_at: range)
-           .group(summary_conversation_group_by_key)
-           .count
+    conversations = account.conversations.where(created_at: range)
+    conversations = conversations.where(inbox_id: inbox_id) if inbox_id.present? # FlightsMojo: channel filter
+    conversations.group(summary_conversation_group_by_key).count
   end
 
   def merge_summary_results(metric_results, conversation_counts)

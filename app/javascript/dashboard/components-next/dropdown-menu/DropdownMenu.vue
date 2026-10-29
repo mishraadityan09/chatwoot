@@ -136,6 +136,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale (five text-sm -> text-[13px]) -->
   <div
     class="bg-n-alpha-3 backdrop-blur-[100px] border-0 outline outline-1 outline-n-container absolute rounded-xl z-50 flex flex-col min-w-[136px] shadow-lg pt-2 overflow-hidden"
   >
@@ -150,7 +151,7 @@ onMounted(() => {
         :placeholder="
           searchPlaceholder || t('DROPDOWN_MENU.SEARCH_PLACEHOLDER')
         "
-        class="reset-base w-full h-8 py-2 ltr:pl-10 ltr:pr-2 rtl:pl-2 rtl:pr-10 text-sm focus:outline-none border-none rounded-lg bg-n-alpha-black2 dark:bg-n-solid-1 text-n-slate-12"
+        class="reset-base w-full h-8 py-2 ltr:pl-10 ltr:pr-2 rtl:pl-2 rtl:pr-10 text-[13px] focus:outline-none border-none rounded-lg bg-n-alpha-black2 dark:bg-n-solid-1 text-n-slate-12"
         @input="handleSearchInput"
       />
     </div>
@@ -175,7 +176,7 @@ onMounted(() => {
           </div>
           <div
             v-else-if="!section.items.length && section.emptyState"
-            class="text-sm text-n-slate-11 px-2 py-1.5"
+            class="text-[13px] text-n-slate-11 px-2 py-1.5"
           >
             {{ section.emptyState }}
           </div>
@@ -217,7 +218,7 @@ onMounted(() => {
             <slot name="label" :item="item">
               <span
                 v-if="item.label"
-                class="min-w-0 text-sm font-420 truncate"
+                class="min-w-0 text-[13px] font-420 truncate"
                 :class="labelClass"
               >
                 {{ item.label }}
@@ -273,7 +274,7 @@ onMounted(() => {
           <slot name="label" :item="item">
             <span
               v-if="item.label"
-              class="min-w-0 text-sm font-420 truncate"
+              class="min-w-0 text-[13px] font-420 truncate"
               :class="labelClass"
             >
               {{ item.label }}
@@ -284,7 +285,7 @@ onMounted(() => {
       </template>
       <div
         v-if="shouldShowEmptyState"
-        class="text-sm text-n-slate-11 px-2 py-1.5"
+        class="text-[13px] text-n-slate-11 px-2 py-1.5"
       >
         {{
           isSearching

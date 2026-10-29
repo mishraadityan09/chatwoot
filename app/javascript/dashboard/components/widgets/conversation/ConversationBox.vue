@@ -107,10 +107,11 @@ export default {
         'border-b border-b-n-weak !pt-2': !dashboardApps.length,
       }"
     />
+    <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale: tabs 14 -> 13 px (scoped: the shared TabsItem stays) -->
     <woot-tabs
       v-if="dashboardApps.length && currentChat.id"
       :index="activeIndex"
-      class="h-10"
+      class="h-10 [&_a]:!text-[13px]"
       @change="onDashboardAppTabChange"
     >
       <woot-tabs-item

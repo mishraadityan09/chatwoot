@@ -226,7 +226,9 @@ export const colors = {
     },
 
     black: '#000000',
-    brand: '#2781F6',
+    // FlightsMojo: brand follows --blue-9 so _flightsmojo.scss can recolour
+    // it; the fallback keeps the widget (no next-colors) on Chatwoot blue.
+    brand: 'rgb(var(--blue-9, 39 129 246) / <alpha-value>)',
     portal: 'var(--dynamic-portal-color)',
     'portal-soft': 'var(--dynamic-portal-color-soft)',
     'portal-faint': 'var(--dynamic-portal-color-faint)',

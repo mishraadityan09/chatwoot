@@ -78,10 +78,15 @@ class AutoAssignment::AssignmentService
     agents = filter_agents_by_rate_limit(agents)
     return nil if agents.empty?
 
+    # FlightsMojo: agent capacity policies (max open conversations per agent in this inbox)
+    agents = capacity_filter.filter(agents)
+    return nil if agents.empty?
+
     # FlightsMojo: the sticky preference is applied by the selector, after
     # every eligibility filter above, so it can never bypass a gate round
     # robin enforces. The enterprise override passes the same preference.
-    round_robin_selector.select_agent(agents, preferred_user_id: sticky_agent_id(conversation))
+    selector = inbox.assignment_policy&.balanced? ? balanced_selector : round_robin_selector # FlightsMojo
+    selector.select_agent(agents, preferred_user_id: sticky_agent_id(conversation))
   end
 
   # FlightsMojo: sticky assignment. The id of the agent who most recently
@@ -174,6 +179,15 @@ class AutoAssignment::AssignmentService
 
   def round_robin_selector
     @round_robin_selector ||= AutoAssignment::RoundRobinSelector.new(inbox: inbox)
+  end
+
+  # FlightsMojo
+  def balanced_selector
+    @balanced_selector ||= AutoAssignment::BalancedSelector.new(inbox: inbox)
+  end
+
+  def capacity_filter
+    @capacity_filter ||= AutoAssignment::CapacityFilter.new(inbox: inbox)
   end
 end
 

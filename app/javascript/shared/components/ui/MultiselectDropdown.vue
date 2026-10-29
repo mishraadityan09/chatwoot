@@ -92,13 +92,17 @@ const selectedThumbnail = computed(
           () => toggleDropdown() // ensure that the event is not passed to the button
         "
       >
+        <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale -->
         <div class="flex items-center justify-between w-full min-w-0">
-          <h4 v-if="!hasValue" class="text-sm text-ellipsis text-n-slate-12">
+          <h4
+            v-if="!hasValue"
+            class="text-[13px] text-ellipsis text-n-slate-12"
+          >
             {{ multiselectorPlaceholder }}
           </h4>
           <h4
             v-else
-            class="items-center overflow-hidden text-sm leading-tight whitespace-nowrap text-ellipsis text-n-slate-12"
+            class="items-center overflow-hidden text-[13px] leading-tight whitespace-nowrap text-ellipsis text-n-slate-12"
             :title="selectedItemName"
           >
             {{ selectedItemName }}
@@ -147,7 +151,7 @@ const selectedThumbnail = computed(
       >
         <div class="flex items-center justify-between mb-1">
           <h4
-            class="m-0 overflow-hidden text-sm text-n-slate-11 whitespace-nowrap text-ellipsis"
+            class="m-0 overflow-hidden text-[13px] text-n-slate-11 whitespace-nowrap text-ellipsis"
           >
             {{ multiselectorTitle }}
           </h4>

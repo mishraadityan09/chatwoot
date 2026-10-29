@@ -73,6 +73,20 @@ RSpec.describe Conversations::ResolutionJob do
     expect(conversation.reload.label_list).to include('auto-resolved')
   end
 
+  # FlightsMojo: auto-resolutions reach the reporting listener flagged as system actions
+  it 'dispatches the resolved event as a system action' do
+    account.update(auto_resolve_after: 14_400)
+    agent = create(:user, account: account)
+    conversation = create(:conversation, account: account, assignee: agent, last_activity_at: 13.days.ago, waiting_since: nil)
+
+    described_class.perform_now(account: account)
+
+    expect(conversation.reload.status).to eq('resolved')
+    expect(EventDispatcherJob).to have_been_enqueued.with(
+      'conversation.resolved', anything, hash_including(conversation: conversation, fm_system_action: true)
+    )
+  end
+
   it 'resolves only a limited number of conversations in a single execution' do
     stub_const('Limits::BULK_ACTIONS_LIMIT', 2)
     account.update(auto_resolve_after: 14_400, auto_resolve_ignore_waiting: false) # 10 days in minutes

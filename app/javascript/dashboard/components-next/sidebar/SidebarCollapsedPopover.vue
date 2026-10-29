@@ -125,6 +125,7 @@ onMounted(async () => {
         >
           {{ label }}
         </div>
+        <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm) -->
         <ul
           class="m-0 p-0 list-none max-h-[400px] overflow-y-auto no-scrollbar"
         >
@@ -143,7 +144,9 @@ onMounted(async () => {
                     :icon="child.icon"
                     class="size-4 flex-shrink-0"
                   />
-                  <span class="flex-1 truncate text-sm">{{ child.label }}</span>
+                  <span class="flex-1 truncate text-[13px]">{{
+                    child.label
+                  }}</span>
                 </button>
                 <div class="flex flex-shrink-0 items-center gap-1 pe-2">
                   <SidebarSortMenu
@@ -180,7 +183,7 @@ onMounted(async () => {
                   >
                     <router-link
                       :to="subChild.to"
-                      class="flex items-center gap-2 px-2 py-1.5 w-full rounded-lg text-sm text-left rtl:text-right transition-colors duration-150 ease-out"
+                      class="flex items-center gap-2 px-2 py-1.5 w-full rounded-lg text-[13px] text-left rtl:text-right transition-colors duration-150 ease-out"
                       :class="{
                         'text-n-slate-12 bg-n-alpha-2': isActive(subChild),
                         'text-n-slate-11 hover:bg-n-alpha-2':
@@ -219,7 +222,7 @@ onMounted(async () => {
             <li v-else class="py-0.5">
               <router-link
                 :to="child.to"
-                class="flex items-center gap-2 px-2 py-1.5 w-full rounded-lg text-sm text-left rtl:text-right transition-colors duration-150 ease-out"
+                class="flex items-center gap-2 px-2 py-1.5 w-full rounded-lg text-[13px] text-left rtl:text-right transition-colors duration-150 ease-out"
                 :class="{
                   'text-n-slate-12 bg-n-alpha-2': isActive(child),
                   'text-n-slate-11 hover:bg-n-alpha-2': !isActive(child),

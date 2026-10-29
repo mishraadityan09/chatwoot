@@ -68,8 +68,9 @@ const translateValue = computed(() => {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale: Reply / Private note 14 -> 13 px -->
   <button
-    class="flex items-center w-auto h-8 p-1 transition-all border rounded-full bg-n-alpha-2 group relative duration-300 ease-in-out z-0 active:scale-[0.995] active:duration-75"
+    class="flex items-center w-auto h-8 p-1 text-[13px] transition-all border rounded-full bg-n-alpha-2 group relative duration-300 ease-in-out z-0 active:scale-[0.995] active:duration-75"
     :disabled="disabled || isReplyRestricted"
     :class="{
       'cursor-not-allowed': disabled || isReplyRestricted,

@@ -35,7 +35,8 @@ class AssignmentPolicy < ApplicationRecord
 
   enum conversation_priority: { earliest_created: 0, longest_waiting: 1 }
 
-  enum assignment_order: { round_robin: 0 } unless ChatwootApp.enterprise?
+  # FlightsMojo: balanced = the agent with the fewest open conversations in the inbox goes first.
+  enum assignment_order: { round_robin: 0, balanced: 1 } unless ChatwootApp.enterprise?
 end
 
 AssignmentPolicy.include_mod_with('Concerns::AssignmentPolicy')

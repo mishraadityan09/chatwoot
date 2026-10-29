@@ -4,6 +4,24 @@
       <b><%= message.sender&.try(:available_name) || message.sender&.name || '' %></b>
       <% if message.conversation.inbox&.inbox_type == 'Email' %>
         <div style="font-size: 90%; color: #899096; line-height: 16px">
+          <%# FlightsMojo (FM-38): emails we sent are shown as the customer received them %>
+          <% if message.outgoing? %>
+            <% sent_email = transcript_sent_email(message) %>
+            <div>From: <%= sent_email[:from] %></div>
+            <% if sent_email[:to].present? %>
+              <div>To: <%= sent_email[:to].join(", ") %></div>
+            <% end %>
+            <% if sent_email[:cc].present? %>
+              <div>CC: <%= sent_email[:cc].join(", ") %></div>
+            <% end %>
+            <% if sent_email[:bcc].present? %>
+              <div>BCC: <%= sent_email[:bcc].join(", ") %></div>
+            <% end %>
+            <div>Subject: <%= sent_email[:subject] %></div>
+            <% if sent_email[:delivery].present? %>
+              <div><%= sent_email[:delivery] %></div>
+            <% end %>
+          <% else %>
           <% if message.content_attributes.dig(:email, :from).present? %>
             <div>From: <%= message.content_attributes.dig(:email, :from).join(", ") %></div>
           <% else %>
@@ -23,6 +41,7 @@
           <% if message.content_attributes[:bcc_emails].present? %>
             <div>BCC: <%= message.content_attributes[:bcc_emails].join(", ") %></div>
           <% end %>
+          <% end %>
         </div>
       <% end %>
     </td>
@@ -30,7 +49,8 @@
   <tr>
     <td style="padding-bottom: 32px;">
       <% if message.content %>
-        <%= ChatwootMarkdownRenderer.new(message.content).render_message %>
+        <%# FlightsMojo (FM-38): our replies without the quoted earlier mail, which is listed above %>
+        <%= ChatwootMarkdownRenderer.new(transcript_message_content(message)).render_message %>
       <% end %>
       <% if message.attachments.present? %>
         <p>Attachments:</p>
@@ -38,11 +58,12 @@
           <p><a href="<%= attachment.file_url %>" target="_blank"><%= attachment.file.filename.to_s %></a></p>
         <% end %>
       <% end %>
+      <%# FlightsMojo (FM-38): the year is part of the time, for use as proof %>
       <p style="font-size: 90%; font-size: 90%;color: #899096;margin-top: -8px; margin-bottom: 0px;">
       <% if @inbox.timezone.present? %>
-        <%= message.created_at.in_time_zone(@inbox.timezone).strftime('%b %d, %I:%M %p %Z') %>
+        <%= message.created_at.in_time_zone(@inbox.timezone).strftime('%b %d, %Y, %I:%M %p %Z') %>
       <% else %>
-        <%= message.created_at.strftime('%b %d, %I:%M %p %Z') %>
+        <%= message.created_at.strftime('%b %d, %Y, %I:%M %p %Z') %>
       <% end %>
       </p>
     </td>

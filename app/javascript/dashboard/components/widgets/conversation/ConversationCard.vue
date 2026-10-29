@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import Avatar from 'next/avatar/Avatar.vue';
 import Icon from 'dashboard/components-next/icon/Icon.vue';
@@ -12,6 +13,15 @@ import UnreadBadge from 'dashboard/components-next/Conversation/ConversationCard
 import SLACardLabel from './components/SLACardLabel.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
 import Checkbox from 'dashboard/components-next/checkbox/Checkbox.vue';
+// FlightsMojo (FM-35): the status dot shared with the ticket tabs and table
+import {
+  statusDotClass,
+  statusLabelKey,
+} from 'dashboard/flightsmojo/helpers/status';
+import {
+  getBookingId,
+  getTicketSubject,
+} from 'dashboard/flightsmojo/helpers/ticket';
 
 const props = defineProps({
   chat: { type: Object, required: true },
@@ -24,6 +34,8 @@ const props = defineProps({
   showInboxName: { type: Boolean, default: false },
   hideThumbnail: { type: Boolean, default: false },
   compact: { type: Boolean, default: false },
+  // FlightsMojo: show the BK-<id> chip (previous conversations of a contact).
+  showBookingId: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -35,9 +47,22 @@ const emit = defineEmits([
 
 const hovered = ref(false);
 
+const { t: translate } = useI18n();
+// FlightsMojo (FM-35): ticket status on the card, the same dot as the tabs
+// above the list and the table's Status column; the word sits in the tooltip.
+const statusDot = computed(() => statusDotClass(props.chat.status));
+const statusLabel = computed(() => {
+  const key = statusLabelKey(props.chat.status);
+  return key ? translate(key) : props.chat.status || '';
+});
 const unreadCount = computed(() => props.chat.unread_count);
 const hasUnread = computed(() => unreadCount.value > 0);
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
+// FlightsMojo: ticket subject row (email / website tickets), Zendesk-style.
+const ticketSubject = computed(() => getTicketSubject(props.chat));
+const bookingId = computed(() =>
+  props.showBookingId ? getBookingId(props.chat) : ''
+);
 
 const voiceCallData = computed(() => {
   const last = lastMessageInChat.value;
@@ -72,7 +97,10 @@ const showLabelsSection = computed(() => {
 
 const messagePreviewClass = computed(() => {
   return [
-    hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
+    // FlightsMojo: with a subject row, the body stays secondary when unread.
+    hasUnread.value && !ticketSubject.value
+      ? 'font-medium text-n-slate-12'
+      : 'text-n-slate-11',
     !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
     props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
   ];
@@ -108,6 +136,7 @@ watch(
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale (four text-sm -> text-[13px]) -->
   <div
     class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 cursor-pointer conversation border-b border-n-slate-3 hover:border-n-surface-1 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group hover:z-[1] before:content-[none] before:absolute before:-top-px before:inset-x-0 before:h-px before:bg-n-surface-1 before:pointer-events-none hover:before:content-['']"
     :class="{
@@ -179,11 +208,42 @@ watch(
         </div>
       </div>
       <h4
-        class="conversation--user text-sm my-0 mx-2 capitalize pt-0.5 text-ellipsis overflow-hidden whitespace-nowrap flex-1 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
+        class="conversation--user text-[13px] my-0 mx-2 capitalize pt-0.5 flex items-center gap-1.5 min-w-0 ltr:pr-16 rtl:pl-16 text-n-slate-12"
         :class="hasUnread ? 'font-semibold' : 'font-medium'"
       >
-        {{ currentContact.name }}
+        <!-- FlightsMojo (FM-35): status dot, as on the ticket tabs and the table -->
+        <span
+          v-tooltip.top="statusLabel"
+          data-test-id="conversation-status-dot"
+          :aria-label="statusLabel"
+          role="img"
+          class="size-2 rounded-full flex-shrink-0"
+          :class="statusDot"
+        />
+        <span class="truncate">{{ currentContact.name }}</span>
       </h4>
+      <!-- FlightsMojo: booking id, so a customer's several bookings can be told apart -->
+      <p
+        v-if="bookingId"
+        class="my-0 mx-2 leading-5"
+        data-test-id="conversation-booking-id"
+      >
+        <span
+          class="px-1.5 py-0.5 text-xs font-medium rounded bg-n-slate-3 text-n-slate-12"
+        >
+          {{ $t('FLIGHTSMOJO.BOOKING_ID.CHIP', { id: bookingId }) }}
+        </span>
+      </p>
+      <!-- FlightsMojo: ticket subject; the preview below then shows the body -->
+      <p
+        v-if="ticketSubject"
+        data-test-id="conversation-subject"
+        class="text-[13px] my-0 mx-2 leading-5 truncate min-w-0 text-n-slate-12"
+        :class="hasUnread ? 'font-medium pe-6' : 'font-normal'"
+        :title="ticketSubject"
+      >
+        {{ ticketSubject }}
+      </p>
       <VoiceCallStatus
         v-if="voiceCallData.status"
         key="voice-status-row"
@@ -195,13 +255,14 @@ watch(
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
-        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
+        :prefer-body="!!ticketSubject"
+        class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-[13px]"
         :class="messagePreviewClass"
       />
       <p
         v-else
         key="no-messages"
-        class="text-n-slate-11 text-sm my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        class="text-n-slate-11 text-[13px] my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
         :class="messagePreviewClass"
       >
         <fluent-icon

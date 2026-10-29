@@ -110,7 +110,9 @@ const shouldShowItem = child => {
 // set scrollEnd to true when the scroll reaches the end
 useEventListener(scrollableContainer, 'scroll', () => {
   const { scrollHeight, scrollTop, clientHeight } = scrollableContainer.value;
-  scrollEnd.value = scrollHeight - scrollTop === clientHeight;
+  // FlightsMojo: 1px slack. On Retina/zoomed screens scrollTop is fractional,
+  // so an exact match never fired and the fade kept covering the last item.
+  scrollEnd.value = scrollHeight - scrollTop - clientHeight <= 1;
 });
 
 useEventListener(window, 'storage', event => {

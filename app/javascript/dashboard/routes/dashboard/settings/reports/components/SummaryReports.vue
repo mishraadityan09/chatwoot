@@ -41,8 +41,13 @@ const store = useStore();
 const from = ref(0);
 const to = ref(0);
 const businessHours = ref(false);
+// FlightsMojo: channel filter, agents report only (null = all channels).
+const fmInboxId = ref(null);
 import { useI18n } from 'vue-i18n';
 import SummaryReportLink from './SummaryReportLink.vue';
+// FlightsMojo: channel filter on the agents report (Reports → Agents).
+import FmChannelFilter from 'dashboard/flightsmojo/reports/FmChannelFilter.vue';
+import { withChannelSuffix } from 'dashboard/flightsmojo/reports/channelFilter';
 
 const flagMap = {
   agent: 'isFetchingAgentSummaryReports',
@@ -137,6 +142,7 @@ const fetchReportsWithRetry = async () => {
     since: from.value,
     until: to.value,
     businessHours: businessHours.value,
+    inboxId: fmInboxId.value, // FlightsMojo: channel filter
   };
   try {
     await store.dispatch(props.actionKey, params);
@@ -163,6 +169,12 @@ const onFilterChange = updatedFilter => {
   fetchAllData();
 };
 
+// FlightsMojo: a channel change re-fetches the summary only (same agent list).
+const onFmChannelChange = inboxId => {
+  fmInboxId.value = inboxId;
+  fetchReportsWithRetry();
+};
+
 const table = useVueTable({
   get data() {
     return tableData.value;
@@ -184,16 +196,24 @@ const downloadReports = () => {
     team: 'downloadTeamReports',
   };
   if (dispatchMethods[props.type]) {
-    const fileName = generateFileName({
-      type: props.type,
-      to: to.value,
-      businessHours: businessHours.value,
-    });
+    // FlightsMojo: the download follows the channel filter; the file name says which channel.
+    const fmInbox = fmInboxId.value
+      ? store.getters['inboxes/getInbox'](fmInboxId.value)
+      : null;
+    const fileName = withChannelSuffix(
+      generateFileName({
+        type: props.type,
+        to: to.value,
+        businessHours: businessHours.value,
+      }),
+      fmInbox?.name
+    );
     const params = {
       from: from.value,
       to: to.value,
       fileName,
       businessHours: businessHours.value,
+      inboxId: fmInboxId.value,
     };
     store.dispatch(dispatchMethods[props.type], params);
   }
@@ -203,10 +223,16 @@ defineExpose({ downloadReports });
 </script>
 
 <template>
-  <OverviewReportFilters
-    :disabled="isLoading"
-    @filter-change="onFilterChange"
-  />
+  <OverviewReportFilters :disabled="isLoading" @filter-change="onFilterChange">
+    <!-- FlightsMojo: channel filter, agents report only -->
+    <template #filters>
+      <FmChannelFilter
+        v-if="type === 'agent'"
+        :model-value="fmInboxId"
+        @update:model-value="onFmChannelChange"
+      />
+    </template>
+  </OverviewReportFilters>
   <div
     class="relative flex-1 overflow-auto px-2 py-2 mt-5 shadow outline-1 outline outline-n-container rounded-xl bg-n-solid-2"
   >

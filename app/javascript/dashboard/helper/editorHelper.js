@@ -8,8 +8,14 @@ import {
 } from '@chatwoot/prosemirror-schema';
 import * as Sentry from '@sentry/vue';
 import camelcaseKeys from 'camelcase-keys';
+import { getMessageVariables } from '@chatwoot/utils';
 import { FORMATTING, MARKDOWN_PATTERNS } from 'dashboard/constants/editor';
 import { INBOX_TYPES, TWILIO_CHANNEL_MEDIUM } from 'dashboard/helper/inbox';
+// FlightsMojo: keep editor Markdown parseable (see the helper's header).
+import {
+  ensureParseable,
+  unindentPastedText,
+} from 'dashboard/flightsmojo/helpers/messageMarkdown';
 
 /**
  * Extract text from markdown, and remove all images, code blocks, links, headers, bold, italic, lists etc.
@@ -440,7 +446,8 @@ export function stripUnsupportedFormatting(content, schema) {
     }
   });
 
-  return sanitizedContent;
+  // FlightsMojo: whatever the patterns above miss must still parse.
+  return ensureParseable(sanitizedContent, schema);
 }
 
 /**
@@ -491,6 +498,14 @@ export const getAgentVariables = user => ({
 export const getContactVariables = contact =>
   getNameVariables('contact', contact?.name);
 
+// Variables the editor resolves while composing a reply. Matches the backend
+// drops: names are Ruby-capitalized and {{agent.*}} is the sender, not the assignee.
+export const getReplyVariables = ({ conversation, contact, inbox, user }) => ({
+  ...getMessageVariables({ conversation, contact, inbox }),
+  ...getContactVariables(contact),
+  ...getAgentVariables(user),
+});
+
 // Resolves a manually typed {{variable}} to its value on the closing braces.
 // Leaves the placeholder when there's no value, the value is Liquid, or it's a private note.
 export const createVariableInputRule = ({ isPrivate, getVariables }) => {
@@ -533,7 +548,7 @@ const createNode = (editorView, nodeType, content) => {
       // Strip unsupported formatting before parsing to ensure content can be inserted
       // into channels that don't support certain markdown features (e.g., API channels)
       const sanitizedContent = stripUnsupportedFormatting(
-        content,
+        unindentPastedText(content), // FlightsMojo: Word's Tab-indented lines
         state.schema
       );
       return new MessageMarkdownTransformer(state.schema).parse(

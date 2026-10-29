@@ -1,0 +1,71 @@
+{
+  "FLIGHTSMOJO": {
+    "BOOKING_ID": {
+      "CHIP": "BK-{id}",
+      "COPY_TOOLTIP": "Click to copy booking ID",
+      "COPY_SUCCESS": "Booking ID copied to clipboard"
+    },
+    "TICKETS": {
+      "COLUMNS": {
+        "STATUS": "Status",
+        "SUBJECT": "Subject",
+        "REQUESTER": "Requester",
+        "REQUESTED": "Requested",
+        "PRIORITY": "Priority",
+        "GROUP": "Group",
+        "ASSIGNEE": "Assignee",
+        "CHANNEL": "Channel",
+        "UPDATED": "Updated",
+        "ID": "ID",
+        "BOOKING_ID": "Booking ID",
+        "LABELS": "Labels",
+        "EMAIL": "Email",
+        "FIRST_RESPONSE": "First response",
+        "WAITING_SINCE": "Waiting since"
+      },
+      "COLUMNS_MENU": {
+        "BUTTON": "Columns",
+        "TITLE": "Table columns",
+        "HINT": "Tick to show, drag to reorder",
+        "RESET": "Reset to default"
+      },
+      "SORT_BY_COLUMN": "Sort by {column}",
+      "STATUS": {
+        "OPEN": "Open",
+        "PENDING": "Pending",
+        "SNOOZED": "Snoozed",
+        "RESOLVED": "Resolved"
+      },
+      "PRIORITY": {
+        "URGENT": "Urgent",
+        "HIGH": "High",
+        "MEDIUM": "Medium",
+        "LOW": "Low",
+        "NONE": "No priority"
+      },
+      "SUMMARY": {
+        "FOLDER": "{loaded} of {total} tickets",
+        "LOADED": "{count} tickets shown"
+      },
+      "UPDATED_JUST_NOW": "Updated just now",
+      "UPDATED_AGO": "Updated {time}",
+      "EMPTY_VALUE": "—",
+      "ROW_ACTIONS": "More actions",
+      "MORE_LABELS": "+{count}"
+    },
+    "TABS": {
+      "LABEL": "Open tickets",
+      "VIEWS": "Views",
+      "TICKET": "Ticket",
+      "ID": "#{id}",
+      "CLOSE": "Close tab"
+    },
+    "REPORTS": {
+      "CHANNEL": {
+        "ALL": "All channels",
+        "SEARCH": "Search channels",
+        "EMPTY": "No channels found"
+      }
+    }
+  }
+}

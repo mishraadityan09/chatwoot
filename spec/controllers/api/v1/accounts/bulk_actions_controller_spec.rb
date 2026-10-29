@@ -46,6 +46,30 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
+      it 'Rejects bulk assignment to an assignee outside the account' do
+        other_user = create(:user, account: create(:account))
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: { type: 'Conversation', fields: { assignee_id: other_user.id }, ids: Conversation.first(2).pluck(:display_id) }
+        end.not_to have_enqueued_job(BulkActionsJob)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'Rejects bulk assignment to a team outside the account' do
+        other_team = create(:team, account: create(:account))
+
+        expect do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: { type: 'Conversation', fields: { team_id: other_team.id }, ids: Conversation.first(2).pluck(:display_id) }
+        end.not_to have_enqueued_job(BulkActionsJob)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
       it 'Bulk update conversation status' do
         expect(Conversation.first.status).to eq('open')
         expect(Conversation.last.status).to eq('open')
@@ -300,6 +324,60 @@ RSpec.describe 'Api::V1::Accounts::BulkActionsController', type: :request do
              }
 
         expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    # FlightsMojo (FM-24): the bulk Resolve honours the required conversation attributes.
+    context 'when the account requires attributes before resolving' do
+      let!(:agent) { create(:user, account: account, role: :agent) }
+      let!(:booking_attribute) do
+        create(:custom_attribute_definition, account: account, attribute_key: 'booking_id',
+                                             attribute_display_type: :text, attribute_model: :conversation_attribute)
+      end
+
+      before do
+        Conversation.all.find_each { |conversation| create(:inbox_member, inbox: conversation.inbox, user: agent) }
+        account.enable_features!('conversation_required_attributes')
+        account.update!(settings: account.settings.merge('conversation_required_attributes' => ['booking_id']))
+      end
+
+      def bulk(status, ids)
+        perform_enqueued_jobs do
+          post "/api/v1/accounts/#{account.id}/bulk_actions",
+               headers: agent.create_new_auth_token,
+               params: { type: 'Conversation', fields: { status: status }, ids: ids }
+        end
+      end
+
+      it 'refuses to resolve while a selected conversation misses one, and names it' do
+        filled, missing = Conversation.first(2)
+        filled.update!(custom_attributes: { 'booking_id' => '48211902' })
+
+        bulk('resolved', [filled.display_id, missing.display_id])
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['missing_attributes']).to eq(['booking_id'])
+        expect(response.parsed_body['conversation_ids']).to eq([missing.display_id])
+        expect(response.parsed_body['error']).to include(booking_attribute.attribute_display_name)
+        expect(response.parsed_body['error']).to include("##{missing.display_id}")
+        expect(filled.reload.status).to eq('open')
+        expect(missing.reload.status).to eq('open')
+      end
+
+      it 'resolves when every selected conversation has the attribute' do
+        Conversation.first(2).each { |conversation| conversation.update!(custom_attributes: { 'booking_id' => '48211902' }) }
+
+        bulk('resolved', Conversation.first(2).pluck(:display_id))
+
+        expect(response).to have_http_status(:success)
+        expect(Conversation.first(2).map(&:status)).to all(eq('resolved'))
+      end
+
+      it 'does not block other bulk updates such as snoozing' do
+        bulk('snoozed', Conversation.first(2).pluck(:display_id))
+
+        expect(response).to have_http_status(:success)
+        expect(Conversation.first(2).map(&:status)).to all(eq('snoozed'))
       end
     end
   end

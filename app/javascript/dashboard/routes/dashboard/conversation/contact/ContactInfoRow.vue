@@ -78,6 +78,7 @@ export default {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-31): ticket view on the 13 px workspace scale (four text-sm -> text-[13px]) -->
   <div class="group/row w-full h-5 ltr:-ml-1 rtl:-mr-1">
     <!-- Inline edit mode -->
     <div v-if="isEditing" class="flex items-center w-full min-w-0 gap-2">
@@ -111,12 +112,12 @@ export default {
       />
       <span
         v-if="value"
-        class="overflow-hidden text-sm whitespace-nowrap text-ellipsis"
+        class="overflow-hidden text-[13px] whitespace-nowrap text-ellipsis"
         :title="value"
       >
         {{ value }}
       </span>
-      <span v-else class="text-sm text-n-slate-11">
+      <span v-else class="text-[13px] text-n-slate-11">
         {{ $t('CONTACT_PANEL.NOT_AVAILABLE') }}
       </span>
       <NextButton
@@ -150,9 +151,9 @@ export default {
       <span
         v-if="value"
         v-dompurify-html="value"
-        class="overflow-hidden text-sm whitespace-nowrap text-ellipsis"
+        class="overflow-hidden text-[13px] whitespace-nowrap text-ellipsis"
       />
-      <span v-else class="text-sm text-n-slate-11">
+      <span v-else class="text-[13px] text-n-slate-11">
         {{ $t('CONTACT_PANEL.NOT_AVAILABLE') }}
       </span>
       <NextButton

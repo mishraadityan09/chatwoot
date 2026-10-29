@@ -1,0 +1,11 @@
+# FlightsMojo: our own strings, so Chatwoot's locale files stay untouched.
+en:
+  conversations:
+    required_attributes:
+      missing: 'Fill in %{attributes} before resolving this conversation.'
+      missing_bulk: 'Fill in %{attributes} before resolving. Still missing on %{ids}.'
+      missing_macro: 'The macro did not resolve this conversation: fill in %{attributes} first.'
+    # FM-38: delivery line for each email we sent, in the conversation transcript
+    transcript_details:
+      accepted: 'Delivery: accepted by our mail server, Message-ID <%{message_id}>'
+      failed: 'Delivery: failed to send, %{error}'

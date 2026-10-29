@@ -4,7 +4,9 @@ import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import ConversationCard from './widgets/conversation/ConversationCard.vue';
-import ConversationCardExpanded from 'dashboard/components-next/Conversation/ConversationCard/ConversationCardExpanded.vue';
+// FlightsMojo: the expanded layout renders our Zendesk-style ticket row (same
+// props/events as upstream's ConversationCardExpanded).
+import ConversationCardExpanded from 'dashboard/flightsmojo/tickets/FmTicketRow.vue';
 import ContextMenu from 'dashboard/components/ui/ContextMenu.vue';
 import ConversationContextMenu from './widgets/conversation/contextMenu/Index.vue';
 

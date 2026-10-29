@@ -69,8 +69,9 @@ const TREE_ELBOW =
     >
       <div class="inline-flex min-w-0 items-center gap-2">
         <Icon v-if="icon" :icon="icon" class="size-4 flex-shrink-0" />
+        <!-- FlightsMojo (FM-30): sidebar text on the 13 px workspace scale (was text-sm) -->
         <span
-          class="flex-grow truncate text-start text-sm font-medium leading-5"
+          class="flex-grow truncate text-start text-[13px] font-medium leading-5"
         >
           {{ label }}
         </span>

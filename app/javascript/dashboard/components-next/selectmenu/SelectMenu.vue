@@ -41,6 +41,7 @@ const handleSelect = value => {
 </script>
 
 <template>
+  <!-- FlightsMojo (FM-36): popovers on the 13 px workspace scale: trigger and options 14 -> 13 px -->
   <div
     v-on-clickaway="() => (isOpen = false)"
     class="relative flex flex-col gap-1 w-fit"
@@ -51,7 +52,7 @@ const handleSelect = value => {
       trailing-icon
       color="slate"
       variant="faded"
-      class="!w-fit max-w-40"
+      class="!w-fit max-w-40 !text-[13px]"
       :class="{ 'dark:!bg-n-alpha-2 !bg-n-slate-9/20': isOpen }"
       :label="labelValue"
       @click="toggleMenu"
@@ -76,7 +77,7 @@ const handleSelect = value => {
         variant="ghost"
         color="slate"
         trailing-icon
-        class="!justify-end !px-2.5 !h-7"
+        class="!justify-end !px-2.5 !h-7 !text-[13px]"
         :class="{ '!bg-n-alpha-2': option.value === modelValue }"
         @click="handleSelect(option.value)"
       />

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 
 import MessageMeta from '../MessageMeta.vue';
 import CaptainGenerationDetails from '../CaptainGenerationDetails.vue';
+import TranslationToggle from '../TranslationToggle.vue';
 
 import { emitter } from 'shared/helpers/mitt';
 import { useMessageContext } from '../provider.js';
@@ -10,7 +11,7 @@ import { useI18n } from 'vue-i18n';
 
 import MessageFormatter from 'shared/helpers/MessageFormatter.js';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
-import { MESSAGE_VARIANTS, ORIENTATION, SENDER_TYPES } from '../constants';
+import { MESSAGE_VARIANTS, ORIENTATION } from '../constants';
 
 const props = defineProps({
   hideMeta: { type: Boolean, default: false },
@@ -22,15 +23,10 @@ const {
   inReplyTo,
   shouldGroupWithNext,
   id,
-  sender,
-  senderType,
+  isCaptainMessage,
+  showingOriginal,
 } = useMessageContext();
 const { t } = useI18n();
-
-const isCaptainMessage = computed(
-  () =>
-    (sender.value?.type ?? senderType.value) === SENDER_TYPES.CAPTAIN_ASSISTANT
-);
 
 const metaColorClass = computed(() =>
   variant.value === MESSAGE_VARIANTS.PRIVATE
@@ -47,7 +43,9 @@ const varaintBaseMap = {
   [MESSAGE_VARIANTS.PRIVATE]:
     'bg-n-solid-amber text-n-amber-12 [&_.prosemirror-mention-node]:font-semibold',
   [MESSAGE_VARIANTS.USER]: 'bg-n-slate-4 text-n-slate-12',
-  [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 text-sm',
+  // FlightsMojo (FM-31): activity lines 14 -> 13 px. `!` because the root also
+  // carries text-sm and Tailwind orders the named size after the arbitrary one.
+  [MESSAGE_VARIANTS.ACTIVITY]: 'bg-n-alpha-1 text-n-slate-11 !text-[13px]',
   [MESSAGE_VARIANTS.BOT]: 'bg-n-solid-iris text-n-slate-12',
   [MESSAGE_VARIANTS.TEMPLATE]: 'bg-n-solid-iris text-n-slate-12',
   [MESSAGE_VARIANTS.ERROR]: 'bg-n-ruby-4 text-n-ruby-12',
@@ -143,8 +141,16 @@ const replyToPreview = computed(() => {
         :message-id="id"
         class="mt-2"
       >
+        <TranslationToggle
+          :icon="false"
+          :showing-original="showingOriginal"
+          @toggle="showingOriginal = !showingOriginal"
+        />
         <template #meta>
-          <MessageMeta :class="[emailMetaClass, metaColorClass]" />
+          <MessageMeta
+            class="shrink-0 whitespace-nowrap"
+            :class="[emailMetaClass, metaColorClass]"
+          />
         </template>
       </CaptainGenerationDetails>
       <MessageMeta

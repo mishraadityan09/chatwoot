@@ -3,6 +3,8 @@ import { useMapGetter } from 'dashboard/composables/store';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { ATTRIBUTE_TYPES } from 'dashboard/components-next/ConversationWorkflow/constants';
+// FlightsMojo: a value that breaks the attribute's pattern counts as not filled.
+import { getRegexp } from 'shared/helpers/Validators';
 
 /**
  * Composable for managing conversation required attributes workflow
@@ -80,7 +82,18 @@ export function useConversationRequiredAttributes() {
 
       // For other attribute types, only consider null, undefined, empty string, or whitespace-only as missing
       // Allow falsy values like 0, false as they are valid filled values
-      return value == null || String(value).trim() === '';
+      if (value == null || String(value).trim() === '') return true;
+
+      // FlightsMojo: e.g. a booking id typed as text when the pattern wants digits
+      // (the website pre-chat form lets visitors write this attribute).
+      if (attribute.regexPattern) {
+        try {
+          return !getRegexp(attribute.regexPattern).test(String(value));
+        } catch {
+          return false;
+        }
+      }
+      return false;
     });
 
     return {

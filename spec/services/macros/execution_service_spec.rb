@@ -156,6 +156,33 @@ RSpec.describe Macros::ExecutionService, type: :service do
         message = Message.last
         expect(message.attachments).to be_present
       end
+
+      it 'only sends macro files when stored actions also reference another account attachment' do
+        foreign_message = create(:message, :with_attachment)
+        foreign_blob = foreign_message.attachments.first.file.blob
+        own_blob = macro.files.first.blob
+        macro.update!(actions: [{ action_name: 'send_attachment', action_params: [own_blob.id, foreign_blob.id] }])
+
+        service.perform
+
+        expect(conversation.messages.last.attachments.map { |attachment| attachment.file.blob_id }).to eq([own_blob.id])
+      end
+
+      it 'does not send another account attachment when no requested blob belongs to the macro' do
+        foreign_message = create(:message, :with_attachment)
+        foreign_blob = foreign_message.attachments.first.file.blob
+        macro.update!(actions: [{ action_name: 'send_attachment', action_params: [foreign_blob.id] }])
+
+        expect { service.perform }.not_to change(conversation.messages, :count)
+      end
+
+      it 'does not send files belonging to another macro in the same account' do
+        other_macro = create(:macro, account: account)
+        other_macro.files.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+        macro.update!(actions: [{ action_name: 'send_attachment', action_params: [other_macro.files.first.blob_id] }])
+
+        expect { service.perform }.not_to change(conversation.messages, :count)
+      end
     end
 
     context 'when conversation is a tweet or macro has no files attached' do
@@ -166,6 +193,35 @@ RSpec.describe Macros::ExecutionService, type: :service do
           service.send(:send_attachment, [macro.files.first.blob_id])
         end.not_to change(Message, :count)
       end
+    end
+  end
+
+  # FlightsMojo (FM-24): a macro run by a person cannot resolve past a missing required attribute.
+  describe '#resolve_conversation' do
+    before do
+      account.enable_features!('conversation_required_attributes')
+      create(:custom_attribute_definition, account: account, attribute_key: 'booking_id', attribute_display_name: 'Booking ID',
+                                           attribute_display_type: :text, attribute_model: :conversation_attribute)
+      account.update!(settings: account.settings.merge('conversation_required_attributes' => ['booking_id']))
+    end
+
+    after { Current.reset }
+
+    it 'leaves the conversation open and says why in a private note while the attribute is missing' do
+      expect { service.send(:resolve_conversation, []) }.to change(Message, :count).by(1)
+
+      expect(conversation.reload).to be_open
+      note = Message.last
+      expect(note.private).to be(true)
+      expect(note.content).to include('Booking ID')
+    end
+
+    it 'resolves once the attribute is filled in' do
+      conversation.update!(custom_attributes: { 'booking_id' => '48211902' })
+
+      expect { service.send(:resolve_conversation, []) }.not_to change(Message, :count)
+
+      expect(conversation.reload).to be_resolved
     end
   end
 
