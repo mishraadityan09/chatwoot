@@ -218,6 +218,8 @@ class Conversation < ApplicationRecord
     return false unless saved_change_to_assignee_id?
     return false if assignee_id.blank?
     return false if self_assign?(assignee_id)
+    # FlightsMojo (FM-39): a ticket distribution sends one summary per agent instead
+    return false if TicketDistribution::QuietAssignment.active?
 
     true
   end

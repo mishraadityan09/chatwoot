@@ -177,6 +177,11 @@ Rails.application.routes.draw do
               resources :inbox_limits, only: [:create, :update, :destroy]
             end
           end
+          # FlightsMojo (FM-39): administrators share unsolved tickets equally among picked agents
+          resource :ticket_distribution, only: [:show, :create] do
+            post :preview
+            get :status
+          end
           resources :campaigns, only: [:index, :create, :show, :update, :destroy] do
             if ChatwootApp.enterprise?
               get 'analytics/metrics', to: 'campaigns/analytics#metrics'
