@@ -1,5 +1,6 @@
 import { shallowMount } from '@vue/test-utils';
 import ChatListHeader from '../ChatListHeader.vue';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 vi.mock('dashboard/composables/useUISettings', async () => {
   const { ref } = await import('vue');
@@ -9,6 +10,13 @@ vi.mock('dashboard/composables/useUISettings', async () => {
       updateUISettings: vi.fn(),
     }),
   };
+});
+
+// FlightsMojo (FM-39): the Distribute button needs the current role
+vi.mock('dashboard/composables/useAdmin', async () => {
+  const { ref } = await import('vue');
+  const isAdmin = ref(false);
+  return { useAdmin: () => ({ isAdmin }) };
 });
 
 const mountHeader = props =>
@@ -79,5 +87,21 @@ describe('ChatListHeader', () => {
     expect(wrapper.find('h1').text()).toBe('Conversations');
     expect(wrapper.find('[icon="i-lucide-pen-line"]').exists()).toBe(true);
     expect(wrapper.find('[icon="i-lucide-trash-2"]').exists()).toBe(true);
+  });
+
+  // FlightsMojo (FM-39)
+  it('shows the Distribute button to administrators only', () => {
+    const { isAdmin } = useAdmin();
+    isAdmin.value = false;
+    expect(mountHeader().find('[icon="i-lucide-split"]').exists()).toBe(false);
+
+    isAdmin.value = true;
+    expect(mountHeader().find('[icon="i-lucide-split"]').exists()).toBe(true);
+    expect(
+      mountHeader({ hasAppliedFilters: true, contactFilter })
+        .find('[icon="i-lucide-split"]')
+        .exists()
+    ).toBe(false);
+    isAdmin.value = false;
   });
 });

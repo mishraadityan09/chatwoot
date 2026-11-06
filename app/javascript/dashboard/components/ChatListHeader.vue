@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, defineAsyncComponent, ref, useTemplateRef } from 'vue';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { formatNumber } from '@chatwoot/utils';
 import wootConstants from 'dashboard/constants/globals';
@@ -7,9 +7,9 @@ import wootConstants from 'dashboard/constants/globals';
 import ConversationBasicFilter from './widgets/conversation/ConversationBasicFilter.vue';
 // FlightsMojo (FM-33): the ticket table's column picker
 import FmTicketColumnsMenu from 'dashboard/flightsmojo/tickets/FmTicketColumnsMenu.vue';
-import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
-import NextButton from 'dashboard/components-next/button/Button.vue';
-
+// FlightsMojo (FM-39): administrators share unsolved tickets among picked agents.
+// Loaded on the first click only, so the window costs nothing on page load.
+import { useAdmin } from 'dashboard/composables/useAdmin';
 const props = defineProps({
   pageTitle: { type: String, required: true },
   contactFilter: { type: Object, default: null },
@@ -20,7 +20,6 @@ const props = defineProps({
   conversationStats: { type: Object, required: true },
   isListLoading: { type: Boolean, required: true },
 });
-
 const emit = defineEmits([
   'addFolders',
   'deleteFolders',
@@ -28,8 +27,21 @@ const emit = defineEmits([
   'basicFilterChange',
   'filtersModal',
 ]);
+const FmDistributeDialog = defineAsyncComponent(
+  () => import('dashboard/flightsmojo/distribution/FmDistributeDialog.vue')
+);
+import SwitchLayout from 'dashboard/routes/dashboard/conversation/search/SwitchLayout.vue';
+import NextButton from 'dashboard/components-next/button/Button.vue';
 
 const { uiSettings, updateUISettings } = useUISettings();
+// FlightsMojo (FM-39)
+const { isAdmin } = useAdmin();
+const distributeDialog = useTemplateRef('distributeDialog');
+const distributeRequested = ref(false);
+const openDistribute = () => {
+  if (distributeDialog.value) distributeDialog.value.open();
+  else distributeRequested.value = true; // mounts it, and it opens itself
+};
 
 const onBasicFilterChange = (value, type) => {
   emit('basicFilterChange', value, type);
@@ -172,6 +184,23 @@ const toggleConversationLayout = () => {
           :class="{ 'ltr:right-0 rtl:left-0': isOnExpandedLayout }"
         />
       </div>
+      <!-- FlightsMojo (FM-39): Distribute tickets, administrators only -->
+      <template v-if="isAdmin && !isContactScoped">
+        <NextButton
+          v-tooltip.top-end="$t('FLIGHTSMOJO.DISTRIBUTE.BUTTON')"
+          :aria-label="$t('FLIGHTSMOJO.DISTRIBUTE.BUTTON')"
+          icon="i-lucide-split"
+          slate
+          xs
+          faded
+          @click="openDistribute"
+        />
+        <FmDistributeDialog
+          v-if="distributeRequested"
+          ref="distributeDialog"
+          open-on-mount
+        />
+      </template>
       <FmTicketColumnsMenu
         v-if="isOnExpandedLayout && !isContactScoped"
         :is-on-expanded-layout="isOnExpandedLayout"

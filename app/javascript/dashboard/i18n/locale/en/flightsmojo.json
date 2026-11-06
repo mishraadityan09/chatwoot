@@ -68,6 +68,56 @@
         "SEARCH": "Search channels",
         "EMPTY": "No channels found"
       }
+    },
+    "DISTRIBUTE": {
+      "BUTTON": "Distribute tickets",
+      "TITLE": "Distribute tickets",
+      "DESCRIPTION": "Share unsolved tickets equally among the agents you pick. Agents keep the tickets they already have, up to their equal share; only the rest moves.",
+      "LOADING": "Loading agents and inboxes…",
+      "TICKETS": {
+        "HEADING": "Which tickets",
+        "ALL_INBOXES": "All inboxes",
+        "TEAM": "Team",
+        "ANY_TEAM": "Any team",
+        "INCLUDE_SNOOZED": "Include snoozed tickets"
+      },
+      "AGENTS": {
+        "HEADING": "Agents to include ({n} picked) | Agents to include ({n} picked) | Agents to include ({n} picked)",
+        "HINT": "Pick the people who are working now. The dot shows their Chatwoot status, for information only.",
+        "SEARCH": "Search agents",
+        "SELECT_SHOWN": "Select shown",
+        "CLEAR": "Clear",
+        "ADMIN": "Admin",
+        "OPEN": "{n} open | {n} open | {n} open"
+      },
+      "PREVIEW": {
+        "SUMMARY": "No open tickets match. | {n} ticket matches; {moving} will move ({unassigned} unassigned now). Nothing has changed yet. | {n} tickets match; {moving} will move ({unassigned} unassigned now). Nothing has changed yet.",
+        "AGENT": "Agent",
+        "NOW": "Has now",
+        "AFTER": "After",
+        "CHANGE": "Change",
+        "UNASSIGNED": "Unassigned",
+        "NOT_PICKED": "(not picked)",
+        "CANNOT_TAKE": "(not in these inboxes, gets none)",
+        "UNPLACEABLE": "{n} tickets in {inbox} can’t be given to anyone you picked (none of them is in that inbox). They stay as they are. | {n} ticket in {inbox} can’t be given to anyone you picked (none of them is in that inbox). It stays as it is. | {n} tickets in {inbox} can’t be given to anyone you picked (none of them is in that inbox). They stay as they are.",
+        "AUTO_ASSIGN_OFF": "Also turn off auto-assignment in {inboxes}, so new tickets wait for your next distribution. | Also turn off auto-assignment in {inboxes}, so new tickets wait for your next distribution. | Also turn off auto-assignment in these {n} inboxes, so new tickets wait for your next distribution: {inboxes}",
+        "NOTIFY_NOTE": "Each agent gets one email with how many tickets they were given, instead of one email per ticket."
+      },
+      "ACTIONS": {
+        "CANCEL": "Cancel",
+        "PREVIEW": "Preview",
+        "BACK": "Back",
+        "CONFIRM": "Nothing to move | Distribute {n} ticket | Distribute {n} tickets",
+        "CLOSE": "Close"
+      },
+      "RUNNING": "Moving tickets… {done} of {total}",
+      "RUNNING_NOTE": "You can close this window; the distribution carries on.",
+      "DONE": "Done: {moved} moved, {skipped} skipped (they were resolved or reassigned after the preview).",
+      "FAILED": "The distribution stopped: {error}",
+      "AUTO_ASSIGN_TURNED_OFF": "Auto-assignment is now off in {n} inboxes. | Auto-assignment is now off in {n} inbox. | Auto-assignment is now off in {n} inboxes.",
+      "ERRORS": {
+        "GENERIC": "Something went wrong. Please try again."
+      }
     }
   }
 }
