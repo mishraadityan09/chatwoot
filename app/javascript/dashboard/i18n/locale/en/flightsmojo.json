@@ -118,6 +118,53 @@
       "ERRORS": {
         "GENERIC": "Something went wrong. Please try again."
       }
+    },
+    "EMAIL_ROUTING": {
+      "SIDEBAR": "Email Routing",
+      "TITLE": "Email Routing",
+      "DESCRIPTION": "Choose which email inbox gets a new mail when it names more than one of our addresses or comes from a chosen sender.",
+      "INTRO": "A new mail goes to the first inbox in this list that matches: its own address is on the mail, the sender is one of its senders, or one of its To/Cc addresses is on the mail. Replies always stay in their ticket. When the same mail reaches us through two mailboxes, it opens one ticket.",
+      "LOADING": "Loading…",
+      "LOAD_FAILED": "Could not load the email routing.",
+      "RETRY": "Try again",
+      "EMPTY": "No inboxes listed. Every new mail goes to the inbox of the first of our addresses on it, as before.",
+      "MISSING_INBOX": "Inbox #{id} (deleted, remove it)",
+      "OWN_ADDRESS": "Own address: {email}",
+      "NO_MEMBERS": "No agents in this inbox yet: only administrators will see the mail sent here. Add agents in Settings → Inboxes → Collaborators before saving.",
+      "MOVE_UP": "Move up",
+      "MOVE_DOWN": "Move down",
+      "REMOVE_INBOX": "Remove from the list",
+      "SENDERS": "Also mail from these senders",
+      "SENDERS_PLACEHOLDER": "nch-ca{'@'}gov.in or {'@'}razorpay.com",
+      "SENDERS_HINT": "An address, or {'@'}domain for a whole domain and its subdomains. Press Enter to add.",
+      "RECIPIENTS": "Also mail with these addresses in To or Cc",
+      "RECIPIENTS_PLACEHOLDER": "grievance{'@'}flightsmojo.in or {'@'}gov.in",
+      "RECIPIENTS_HINT": "For example an address of ours that forwards elsewhere, or a regulator the customer copied in.",
+      "ADD_PLACEHOLDER": "Add an email inbox…",
+      "ADD": "Add",
+      "EVERYTHING_ELSE": "Any other mail goes to the inbox of the first of our addresses on it, as before.",
+      "SAVE": "Save",
+      "DISCARD": "Discard changes",
+      "UNSAVED": "Unsaved changes",
+      "SAVED": "Email routing saved. New mail follows it from now on.",
+      "ERROR": "Something went wrong. Please try again.",
+      "LAST_CHANGED": "Last changed by {name}, {time}",
+      "INVALID_ENTRY": "Not an address or {'@'}domain: {entries}",
+      "REMOVE_ENTRY": "Remove {entry}",
+      "CHECK": {
+        "TITLE": "Try a mail",
+        "DESCRIPTION": "Type a sender and the To/Cc addresses to see which inbox a new mail would go to.",
+        "FROM": "From",
+        "TO": "To and Cc (comma-separated)",
+        "BUTTON": "Check",
+        "RESULT_ADDRESS": "→ {inbox}: its own address is on the mail",
+        "RESULT_SENDER": "→ {inbox}: the sender matches {entry}",
+        "RESULT_RECIPIENT": "→ {inbox}: {entry} is in To/Cc",
+        "RESULT_DEFAULT": "→ {inbox}: no rule matches, so the first of our addresses decides (as before)",
+        "RESULT_REFUSED": "None of our addresses is on this mail, so Chatwoot would not take it.",
+        "RESULT_INVALID": "Those addresses could not be read.",
+        "UNSAVED_NOTE": "The check uses the list on screen, including changes not saved yet."
+      }
     }
   }
 }

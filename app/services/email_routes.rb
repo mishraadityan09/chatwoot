@@ -2,41 +2,67 @@
 #
 # Upstream gives the mail to the inbox of the first of our addresses in To/Cc. A complaint sent to
 # care@ with legal@ in Cc therefore lands in the care inbox, and when both mailboxes forward it, it
-# lands there twice. This setting ranks inboxes and lets chosen senders go to a chosen inbox:
+# lands there twice. Administrators rank email inboxes in Settings → Email Routing; the ordered list
+# is stored in account.settings['email_routes']:
 #
-#   FM_EMAIL_ROUTES="21:nch-ca@gov.in 19:fraud.alerts@razorpay.com,chargebacks@razorpay.com 20:@wego.com"
+#   [{ 'inbox_id' => 21, 'senders' => ['nch-ca@gov.in'], 'recipients' => ['grievance@flightsmojo.in', '@gov.in'] }, …]
 #
-# Left to right is the priority. An Email inbox in the list takes a new mail when
+# A listed inbox takes a new mail when
 #   - its own address or its forwarding address is in To, Cc or X-Original-To,
-#   - the From address is one of its entries ("name@domain", or "@domain" for that domain and its
-#     subdomains), or
-#   - To or Cc holds one of its "to:" entries ("to:grievance@flightsmojo.in", "to:@gov.in").
-# The first inbox that matches wins. A mail that matches none keeps upstream's choice, and so do
-# replies to an existing ticket (they are matched to their ticket before this runs). Unset = off.
+#   - the From address matches one of its senders ("name@domain", or "@domain" for that domain and
+#     its subdomains), or
+#   - To or Cc matches one of its recipients (same forms).
+# The first inbox in the list that matches wins. A mail that matches none keeps upstream's choice, and
+# so do replies to an existing ticket (they are matched to their ticket before this runs). No rules = off.
+# Saving and checking from the settings page: EmailRoutes::Settings.
 module EmailRoutes
-  ENV_KEY = 'FM_EMAIL_ROUTES'.freeze
+  SETTING_KEY = 'email_routes'.freeze
+  CHANGED_KEY = 'email_routes_changed'.freeze
   DOMAIN = /\A@[a-z0-9-]+(\.[a-z0-9-]+)+\z/
-  RULE_START = /\A(\d+)(?::(.*))?\z/m
   Rule = Struct.new(:channel, :senders, :recipients)
+  Match = Struct.new(:channel, :reason, :entry)
 
   module_function
 
-  def enabled?
-    ENV.fetch(ENV_KEY, '').strip.present?
+  def enabled?(account)
+    stored(account).any?
   end
 
   # The channel for this mail, or nil to keep upstream's choice (`default`, the inbox it found).
   def channel_for(mail, default)
-    return if default.nil? || !enabled?
+    return if default.nil?
 
-    senders = addresses_in(mail.from)
-    recipients = addresses_in(mail.to, mail.cc, original_to(mail)).map { |address| without_plus(address) }
-    rules(default.account_id).find { |rule| match?(rule, senders, recipients) }&.channel
+    rules = stored(default.account)
+    return if rules.empty?
+
+    match(mail, default.account, rules)&.channel
   end
 
-  def match?(rule, senders, recipients)
-    rule.senders.any? { |pattern| senders.any? { |address| covers?(pattern, address) } } ||
-      rule.recipients.any? { |pattern| recipients.any? { |address| covers?(pattern, address) } }
+  # The first rule that takes the mail and why: reason :address (the inbox's own address), :sender or :recipient.
+  def match(mail, account, rules)
+    senders = addresses_in(mail.from)
+    recipients = addresses_in(mail.to, mail.cc, original_to(mail)).map { |address| without_plus(address) }
+    build(account, rules).each do |rule|
+      reason, entry = first_hit(rule, senders, recipients)
+      return Match.new(rule.channel, reason, entry) if reason
+    end
+    nil
+  end
+
+  def first_hit(rule, senders, recipients)
+    own = own_addresses(rule.channel)
+    hit = recipients.find { |address| own.include?(address) }
+    return [:address, hit] if hit
+
+    hit = matching(rule.senders, senders)
+    return [:sender, hit] if hit
+
+    hit = matching(rule.recipients, recipients)
+    [:recipient, hit] if hit
+  end
+
+  def matching(patterns, addresses)
+    patterns.find { |pattern| addresses.any? { |address| covers?(pattern, address) } }
   end
 
   def covers?(pattern, address)
@@ -45,43 +71,26 @@ module EmailRoutes
     address.end_with?(pattern) || address.end_with?(".#{pattern.delete_prefix('@')}")
   end
 
-  # The configured Email inboxes of this account, in priority order, with their own addresses added.
-  def rules(account_id)
-    parsed = parse
-    inboxes = Inbox.where(id: parsed.map(&:first), account_id: account_id, channel_type: 'Channel::Email').includes(:channel).index_by(&:id)
-    parsed.filter_map do |inbox_id, senders, recipients|
-      channel = inboxes[inbox_id]&.channel
-      next unless channel
+  def own_addresses(channel)
+    [channel.email, channel.forward_to_email].compact_blank.map(&:downcase)
+  end
 
-      own = [channel.email, channel.forward_to_email].compact_blank.map(&:downcase)
-      Rule.new(channel, senders, own + recipients)
+  # The saved list, in priority order.
+  def stored(account)
+    Array(account&.settings&.dig(SETTING_KEY)).select { |rule| rule.is_a?(Hash) }
+  end
+
+  # Saved rules → Rule structs for the account's email inboxes that still exist.
+  def build(account, rules)
+    channels = email_inboxes(account).where(id: rules.pluck('inbox_id')).includes(:channel).index_by(&:id)
+    rules.filter_map do |rule|
+      channel = channels[rule['inbox_id'].to_i]&.channel
+      Rule.new(channel, Array(rule['senders']), Array(rule['recipients'])) if channel
     end
   end
 
-  # "21:a@x.com, @y.com to:b@z.in 19" → [[21, ["a@x.com", "@y.com"], ["b@z.in"]], [19, [], []]]
-  # Spaces, commas and semicolons may all separate entries; a number starts the next inbox.
-  def parse
-    ENV.fetch(ENV_KEY, '').split(/[\s;]+/).compact_blank.each_with_object([]) do |token, list|
-      if (start = token.match(RULE_START))
-        inbox_id = start[1].to_i
-        list << [inbox_id, [], []] unless list.any? { |rule| rule.first == inbox_id }
-        current = list.find { |rule| rule.first == inbox_id }
-        token = start[2].to_s
-      else
-        current = list.last
-      end
-      token.split(',').compact_blank.each { |entry| add_entry(current, entry) }
-    end
-  end
-
-  def add_entry(rule, entry)
-    recipient = entry.downcase.start_with?('to:')
-    value = (recipient ? entry[3..] : entry).to_s.strip.downcase
-    if rule && (value.match?(URI::MailTo::EMAIL_REGEXP) || value.match?(DOMAIN))
-      (recipient ? rule.third : rule.second) << value
-    else
-      Rails.logger.warn("[FM-41] #{ENV_KEY}: ignoring #{entry.inspect}, expected inbox_id:address,@domain,to:address")
-    end
+  def email_inboxes(account)
+    account.inboxes.where(channel_type: 'Channel::Email')
   end
 
   def original_to(mail)

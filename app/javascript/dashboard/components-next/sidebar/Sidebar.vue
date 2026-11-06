@@ -897,6 +897,13 @@ const menuItems = computed(() => {
           ],
           to: accountScopedRoute('settings_inbox_list'),
         },
+        // FlightsMojo (FM-41): which inbox a new mail goes to (administrators only, via the route meta)
+        {
+          name: 'Settings Email Routing',
+          label: t('FLIGHTSMOJO.EMAIL_ROUTING.SIDEBAR'),
+          icon: 'i-lucide-split',
+          to: accountScopedRoute('email_routing_index'),
+        },
         {
           name: 'Settings Templates',
           label: t('SIDEBAR.WHATSAPP_TEMPLATES'),

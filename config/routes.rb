@@ -182,6 +182,10 @@ Rails.application.routes.draw do
             post :preview
             get :status
           end
+          # FlightsMojo (FM-41): Settings → Email Routing (which inbox a new mail goes to)
+          resource :email_routes, only: [:show, :update] do
+            post :check
+          end
           resources :campaigns, only: [:index, :create, :show, :update, :destroy] do
             if ChatwootApp.enterprise?
               get 'analytics/metrics', to: 'campaigns/analytics#metrics'
