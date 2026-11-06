@@ -10,7 +10,9 @@ module MailboxHelper
     source_id = sanitize_mailbox_value(processed_mail.message_id)
     return if @conversation.messages.find_by(source_id: source_id).present?
 
-    @message = @conversation.messages.create!(sanitized_message_attributes(source_id))
+    # FlightsMojo (FM-40): a reply written in Outlook from the team mailbox becomes a private note
+    attributes = OutlookMirror.message_attributes(sanitized_message_attributes(source_id), conversation: @conversation, mail: processed_mail)
+    @message = @conversation.messages.create!(attributes)
   end
 
   def add_attachments_to_message
