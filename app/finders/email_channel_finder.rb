@@ -6,7 +6,8 @@ class EmailChannelFinder
   end
 
   def perform
-    channel_from_primary_recipients || channel_from_bcc_recipients
+    channel = channel_from_primary_recipients || channel_from_bcc_recipients
+    EmailRoutes.channel_for(@email_object, channel) || channel # FlightsMojo (FM-41): FM_EMAIL_ROUTES picks the inbox
   end
 
   private

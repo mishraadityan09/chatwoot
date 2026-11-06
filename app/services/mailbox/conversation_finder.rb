@@ -3,6 +3,7 @@ class Mailbox::ConversationFinder
     Mailbox::ConversationFinderStrategies::ReceiverUuidStrategy,
     Mailbox::ConversationFinderStrategies::InReplyToStrategy,
     Mailbox::ConversationFinderStrategies::ReferencesStrategy,
+    Mailbox::ConversationFinderStrategies::SameMailStrategy, # FlightsMojo (FM-41): a second copy joins the first one's ticket
     Mailbox::ConversationFinderStrategies::NewConversationStrategy
   ].freeze
 
