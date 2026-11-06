@@ -16,6 +16,7 @@ module ConversationReplyMailerHelper
       @options[:cc] = cc_bcc_emails[0]
       @options[:bcc] = cc_bcc_emails[1]
     end
+    OutlookMirror.add_cc!(@options, @inbox) # FlightsMojo (FM-40): Cc the team mailbox (FM_OUTLOOK_MIRROR)
     oauth_smtp_settings
     set_delivery_method
 
