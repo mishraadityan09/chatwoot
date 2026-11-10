@@ -7,7 +7,20 @@
 // persisted — it holds customer names) covers the moments the store doesn't
 // have the ticket (opening a list empties it), and a ticket in neither place
 // is fetched.
-import { computed, reactive, watch } from 'vue';
+//
+// Resolved tickets leave the bar. A tab goes when its ticket *changes* to
+// resolved, compared with the last status the tab saw (the store may have
+// dropped the ticket in between; a websocket update brings it back):
+// - the agent resolved it in this window (resolve button, menu, shortcut,
+//   bulk): the tab closes and, if it was on screen, the next tab opens, as
+//   with ×. Never on small screens, where the bar is hidden.
+// - someone else resolved it (colleague, bot, the agent's other window): an
+//   off-screen tab closes at once; the one on screen stays until the agent
+//   moves on, so nobody is pulled away mid-reply.
+// A failed resolve (e.g. Booking ID missing) never changes the status, so it
+// never closes a tab. Opening an already resolved ticket keeps its tab, but a
+// tab restored after a reload whose ticket was resolved meanwhile is dropped.
+import { computed, onScopeDispose, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'dashboard/composables/store';
 import { frontendURL } from 'dashboard/helper/URLHelper';
@@ -19,6 +32,43 @@ const STORAGE_PREFIX = 'fm.ticketTabs';
 
 const state = reactive({ key: '', tabs: [], lastListPath: '', info: {} });
 const inFlight = new Set();
+
+const RESOLVED = 'resolved';
+// How long a resolve this window asked for counts as the agent's own: a
+// single resolve answers within seconds, a bulk one arrives by websocket.
+export const OWN_RESOLVE_MS = 2 * 60 * 1000;
+const ownResolves = new Map(); // ticket id -> when this window asked
+const resolvedWhileOpen = new Set(); // on screen, resolved by someone else
+const restored = new Set(); // reloaded tabs whose status is not known yet
+
+/** Ticket ids an action asks to resolve (resolve button/menu, or bulk). */
+export const idsResolvedBy = ({ type, payload } = {}) => {
+  if (type === 'toggleStatus' && payload?.status === RESOLVED) {
+    return [Number(payload.conversationId)].filter(Number.isInteger);
+  }
+  if (
+    type === 'bulkActions/process' &&
+    payload?.type === 'Conversation' &&
+    payload?.fields?.status === RESOLVED
+  ) {
+    return []
+      .concat(payload.ids ?? [])
+      .map(Number)
+      .filter(Number.isInteger);
+  }
+  return [];
+};
+
+const isOwnResolve = id => {
+  const at = ownResolves.get(id);
+  return at !== undefined && Date.now() - at < OWN_RESOLVE_MS;
+};
+
+// The bar is hidden below Tailwind's md breakpoint (768px): no jumping to
+// another ticket there.
+const barIsVisible = () =>
+  typeof window.matchMedia !== 'function' ||
+  window.matchMedia('(min-width: 768px)').matches;
 
 const infoFrom = chat => ({
   name: chat.meta?.sender?.name || '',
@@ -92,6 +142,8 @@ export const closeTab = (id, activeId) => {
   if (index === -1) return null;
   state.tabs.splice(index, 1);
   delete state.info[id];
+  resolvedWhileOpen.delete(id);
+  restored.delete(id);
   if (id !== activeId) return null;
   const neighbour = state.tabs[index] || state.tabs[index - 1];
   return neighbour ? neighbour.path : state.lastListPath || null;
@@ -105,6 +157,10 @@ export const useTicketTabs = () => {
   const store = useStore();
   const accountId = computed(() => store?.getters?.getCurrentAccountId);
   const currentUser = computed(() => store?.getters?.getCurrentUser);
+  // Defined before the watchers below: they run at once and read it.
+  const activeId = computed(() => conversationIdOf(route));
+  const isOnList = computed(() => !activeId.value && isListRoute(route));
+  const chatOf = id => store?.getters?.getConversationById?.(id);
 
   // Load this account + agent's tabs once both are known.
   watch(
@@ -117,6 +173,7 @@ export const useTicketTabs = () => {
       // Merge rather than replace: a ticket opened before the agent's data
       // arrived keeps its tab.
       const saved = loadTabs(key);
+      saved.tabs.forEach(tab => restored.add(tab.id));
       const opened = state.tabs.filter(
         tab => !saved.tabs.some(savedTab => savedTab.id === tab.id)
       );
@@ -144,7 +201,37 @@ export const useTicketTabs = () => {
     { immediate: true }
   );
 
-  const chatOf = id => store?.getters?.getConversationById?.(id);
+  // Remember which tickets this window asked to resolve, so a resolve can be
+  // told apart from one made elsewhere (subscribeAction is Vuex's own hook).
+  const unsubscribe = store?.subscribeAction?.({
+    before: action => {
+      idsResolvedBy(action).forEach(id => ownResolves.set(id, Date.now()));
+    },
+    after: action => {
+      // A single resolve has its answer by now: a ticket that is not resolved
+      // (Booking ID missing, network error) was not resolved by the agent.
+      if (action.type !== 'toggleStatus') return;
+      idsResolvedBy(action).forEach(id => {
+        const chat = chatOf(id);
+        if (chat && chat.status !== RESOLVED) ownResolves.delete(id);
+      });
+    },
+  });
+  if (typeof unsubscribe === 'function') onScopeDispose(unsubscribe);
+
+  // A ticket in a tab became resolved (the rules are in the header comment).
+  const onResolved = id => {
+    const active = activeId.value;
+    const own = isOwnResolve(id);
+    ownResolves.delete(id);
+    if (id === active && !own) {
+      resolvedWhileOpen.add(id);
+      return;
+    }
+    const target = closeTab(id, active);
+    saveTabs();
+    if (target && barIsVisible()) router.push(target);
+  };
 
   // Keep each tab's label copy fresh while the store has the ticket, and
   // fetch tickets that are in neither place (e.g. restored after a reload).
@@ -155,10 +242,22 @@ export const useTicketTabs = () => {
         return chat ? infoFrom(chat) : null;
       }),
     live => {
+      const resolved = [];
       live.forEach((info, index) => {
         const { id } = state.tabs[index];
         if (info) {
+          const before = state.info[id]?.status;
+          const wasRestored = restored.delete(id);
           state.info[id] = info;
+          // A change to resolved; or a reloaded tab (not on screen) whose
+          // ticket was resolved while the agent was away.
+          if (
+            info.status === RESOLVED &&
+            before !== RESOLVED &&
+            (before || (wasRestored && id !== activeId.value))
+          ) {
+            resolved.push(id);
+          }
         } else if (!state.info[id] && !inFlight.has(id)) {
           inFlight.add(id);
           Promise.resolve(store?.dispatch('getConversation', id)).finally(
@@ -178,12 +277,25 @@ export const useTicketTabs = () => {
           );
         }
       });
+      // The ticket on screen last, so the tab it moves to is one that stays
+      // (a bulk resolve can close its neighbours in the same update).
+      const active = activeId.value;
+      resolved.sort((a, b) => (a === active) - (b === active));
+      resolved.forEach(onResolved);
     },
     { immediate: true, deep: true }
   );
 
-  const activeId = computed(() => conversationIdOf(route));
-  const isOnList = computed(() => !activeId.value && isListRoute(route));
+  // A ticket someone else resolved while the agent was on it goes once they
+  // move on, unless it was reopened meanwhile.
+  watch(activeId, (now, before) => {
+    if (!before || before === now || !resolvedWhileOpen.has(before)) return;
+    resolvedWhileOpen.delete(before);
+    const status = chatOf(before)?.status ?? state.info[before]?.status;
+    if (status !== RESOLVED) return;
+    closeTab(before, now);
+    saveTabs();
+  });
 
   const open = tab => {
     if (tab.id !== activeId.value) router.push(tab.path);
@@ -220,4 +332,7 @@ export const resetTicketTabs = () => {
   state.lastListPath = '';
   state.info = {};
   inFlight.clear();
+  ownResolves.clear();
+  resolvedWhileOpen.clear();
+  restored.clear();
 };
